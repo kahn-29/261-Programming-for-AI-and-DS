@@ -1,1 +1,14 @@
-./dataset/unzip/*
+# virtual environment
+.venv/
+
+# extracted data
+dataset/unzip/
+
+# python / jupyter junk
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
