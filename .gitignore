@@ -4,6 +4,9 @@
 # extracted data
 dataset/unzip/
 
+# classification cache
+cache/
+
 # python / jupyter junk
 __pycache__/
 *.py[cod]

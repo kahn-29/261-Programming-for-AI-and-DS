@@ -1,7 +1,7 @@
 # 261-Programming-for-AI-and-DS
 
 ## Metadata
-* Dataset: https://huggingface.co/datasets/vduydong/vietnam-real-estates
+* Dataset: https://huggingface.co/datasets/tinixai/vietnam-real-estates
 
 ## Getting started
 ```
