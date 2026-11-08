@@ -1,0 +1,7 @@
+# Optional, heavy dependencies for notebooks 06-07. Install only what you need:
+#   pip install -r requirements-extra.txt
+# Versions are intentionally unpinned; pin them once you know what works on your machine.
+torch
+transformers
+sentence-transformers
+tabpfn
