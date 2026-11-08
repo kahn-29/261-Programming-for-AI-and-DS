@@ -1,0 +1,120 @@
+{
+  "model": "TF-IDF + Ridge",
+  "key": "tfidf",
+  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "dataset": "vduydong/vietnam-real-estates",
+  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "pyarrow": "18.1.0",
+      "scikit-learn": "1.5.2",
+      "lightgbm": "4.5.0",
+      "catboost": "1.2.7",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "selected_parameters": {
+    "ngram_range": [
+      1,
+      2
+    ],
+    "max_features": 30000,
+    "min_df": 3,
+    "max_df": 0.95,
+    "alpha": 10.0
+  },
+  "tuning": [
+    {
+      "ngram_range": [
+        1,
+        1
+      ],
+      "max_features": 30000,
+      "min_df": 3,
+      "max_df": 0.95,
+      "alpha": 10.0,
+      "MAE": 7492538768.766003,
+      "RMSE": 37205155901.09992,
+      "R2": 0.08446840607163564,
+      "MAPE": 27193.530760019337,
+      "fit_seconds": 1.8845998999895528
+    },
+    {
+      "ngram_range": [
+        1,
+        1
+      ],
+      "max_features": 50000,
+      "min_df": 5,
+      "max_df": 1.0,
+      "alpha": 100.0,
+      "MAE": 7893998038.628663,
+      "RMSE": 38058073303.16467,
+      "R2": 0.04201066326878433,
+      "MAPE": 38870.01626477041,
+      "fit_seconds": 2.4565009999787435
+    },
+    {
+      "ngram_range": [
+        1,
+        2
+      ],
+      "max_features": 30000,
+      "min_df": 3,
+      "max_df": 0.95,
+      "alpha": 10.0,
+      "MAE": 6966457891.536745,
+      "RMSE": 36842830718.775635,
+      "R2": 0.10221352246716597,
+      "MAPE": 20910.5478768919,
+      "fit_seconds": 5.791929400002118
+    },
+    {
+      "ngram_range": [
+        1,
+        2
+      ],
+      "max_features": 50000,
+      "min_df": 5,
+      "max_df": 1.0,
+      "alpha": 100.0,
+      "MAE": 8073265275.729126,
+      "RMSE": 38403035609.264725,
+      "R2": 0.024565328281360932,
+      "MAPE": 46467.38935334298,
+      "fit_seconds": 6.886662499979138
+    }
+  ],
+  "metrics": {
+    "validation": {
+      "MAE": 6966457891.536745,
+      "RMSE": 36842830718.775635,
+      "R2": 0.10221352246716597,
+      "MAPE": 20910.5478768919
+    },
+    "test": {
+      "MAE": 39616175622.939415,
+      "RMSE": 2966358669831.2065,
+      "R2": -1.4949272747033504e-05,
+      "MAPE": 54.23365299170268
+    }
+  },
+  "prediction_files": {
+    "validation": {
+      "path": "reports/experiments/predictions/tfidf_validation.parquet",
+      "sha256": "56e506d9985f64e5e97fe155975150e06e8475a6ab623648eed88a3972757e01"
+    },
+    "test": {
+      "path": "reports/experiments/predictions/tfidf_test.parquet",
+      "sha256": "a55281868b8d330fa99a782c4d5b4dc1c8c969c7b36d87113ad2acc0e867f1bc"
+    }
+  },
+  "extra": {
+    "vocabulary_size": 30000
+  }
+}

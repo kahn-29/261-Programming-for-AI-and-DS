@@ -1,0 +1,218 @@
+{
+  "protocol_version": "1.0",
+  "seed": 42,
+  "sample_budget": 60000,
+  "source": {
+    "dataset": "vduydong/vietnam-real-estates",
+    "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+    "files": [
+      {
+        "file": "shard_0000.parquet",
+        "bytes": 93704331,
+        "sha256": "c85762720ca2f206071bf90d6dc8bf623f59b60e334f3dbb1af8919b243e08f8"
+      },
+      {
+        "file": "shard_0001.parquet",
+        "bytes": 93776313,
+        "sha256": "19357a66956fa89183baa78032001e5f661e4e7020d08a552f64297cba2d0785"
+      },
+      {
+        "file": "shard_0002.parquet",
+        "bytes": 93778117,
+        "sha256": "5f9b153cf18567e33835fdbbcd9fec2f616037faba94116b0f7b530aa53722ed"
+      },
+      {
+        "file": "shard_0003.parquet",
+        "bytes": 93971883,
+        "sha256": "9959d85e907e4565105aaf43cb02bd75c977f96c245cb35196a649ae710da207"
+      },
+      {
+        "file": "shard_0004.parquet",
+        "bytes": 93892220,
+        "sha256": "40c2160437e451a33acd08778f40e30eca129439ad316da8191666efb74e785b"
+      }
+    ]
+  },
+  "counts": {
+    "raw_rows": 1000000,
+    "invalid_price": 78419,
+    "invalid_area": 1,
+    "invalid_timestamp": 0,
+    "explicit_rental_only_title": 7294,
+    "eligible_rows": 915657
+  },
+  "raw_schema_by_shard": {
+    "shard_0000.parquet": {
+      "name": "large_string",
+      "description": "large_string",
+      "property_type_name": "large_string",
+      "province_name": "large_string",
+      "district_name": "large_string",
+      "ward_name": "large_string",
+      "street_name": "large_string",
+      "project_name": "large_string",
+      "price": "double",
+      "area": "double",
+      "floor_count": "double",
+      "frontage_width": "double",
+      "house_depth": "double",
+      "road_width": "double",
+      "bedroom_count": "double",
+      "bathroom_count": "double",
+      "house_direction": "large_string",
+      "balcony_direction": "large_string",
+      "published_at": "large_string"
+    },
+    "shard_0001.parquet": {
+      "name": "large_string",
+      "description": "large_string",
+      "property_type_name": "large_string",
+      "province_name": "large_string",
+      "district_name": "large_string",
+      "ward_name": "large_string",
+      "street_name": "large_string",
+      "project_name": "large_string",
+      "price": "double",
+      "area": "double",
+      "floor_count": "double",
+      "frontage_width": "double",
+      "house_depth": "double",
+      "road_width": "double",
+      "bedroom_count": "double",
+      "bathroom_count": "double",
+      "house_direction": "large_string",
+      "balcony_direction": "large_string",
+      "published_at": "large_string"
+    },
+    "shard_0002.parquet": {
+      "name": "large_string",
+      "description": "large_string",
+      "property_type_name": "large_string",
+      "province_name": "large_string",
+      "district_name": "large_string",
+      "ward_name": "large_string",
+      "street_name": "large_string",
+      "project_name": "large_string",
+      "price": "double",
+      "area": "double",
+      "floor_count": "double",
+      "frontage_width": "double",
+      "house_depth": "double",
+      "road_width": "double",
+      "bedroom_count": "double",
+      "bathroom_count": "double",
+      "house_direction": "large_string",
+      "balcony_direction": "large_string",
+      "published_at": "large_string"
+    },
+    "shard_0003.parquet": {
+      "name": "large_string",
+      "description": "large_string",
+      "property_type_name": "large_string",
+      "province_name": "large_string",
+      "district_name": "large_string",
+      "ward_name": "large_string",
+      "street_name": "large_string",
+      "project_name": "large_string",
+      "price": "double",
+      "area": "double",
+      "floor_count": "double",
+      "frontage_width": "double",
+      "house_depth": "double",
+      "road_width": "double",
+      "bedroom_count": "double",
+      "bathroom_count": "double",
+      "house_direction": "large_string",
+      "balcony_direction": "large_string",
+      "published_at": "large_string"
+    },
+    "shard_0004.parquet": {
+      "name": "large_string",
+      "description": "large_string",
+      "property_type_name": "large_string",
+      "province_name": "large_string",
+      "district_name": "large_string",
+      "ward_name": "large_string",
+      "street_name": "large_string",
+      "project_name": "large_string",
+      "price": "double",
+      "area": "double",
+      "floor_count": "double",
+      "frontage_width": "double",
+      "house_depth": "double",
+      "road_width": "double",
+      "bedroom_count": "double",
+      "bathroom_count": "double",
+      "house_direction": "large_string",
+      "balcony_direction": "large_string",
+      "published_at": "large_string"
+    }
+  },
+  "raw_null_counts": {
+    "name": 0,
+    "description": 0,
+    "property_type_name": 0,
+    "province_name": 0,
+    "district_name": 28532,
+    "ward_name": 144810,
+    "street_name": 394211,
+    "project_name": 724633,
+    "house_direction": 694708,
+    "balcony_direction": 843074,
+    "price": 78419,
+    "published_at": 0,
+    "area": 1,
+    "floor_count": 759393,
+    "frontage_width": 484382,
+    "house_depth": 974046,
+    "road_width": 806385,
+    "bedroom_count": 461603,
+    "bathroom_count": 496553
+  },
+  "eligible_month_counts": {
+    "2025-06": 98233,
+    "2025-07": 132305,
+    "2025-08": 124038,
+    "2025-09": 123486,
+    "2025-10": 145968,
+    "2025-11": 140964,
+    "2025-12": 150663
+  },
+  "eligible_property_type_counts": {
+    "Nhà": 430449,
+    "Đất": 219779,
+    "Căn hộ chung cư": 185477,
+    "Biệt thự/Nhà liền kề": 65828,
+    "Shophouse": 14124
+  },
+  "eligible_date_min": "2025-06-01 00:01:38.762000+00:00",
+  "eligible_date_max": "2025-12-30 23:59:15.253000+00:00",
+  "sampled_rows_before_deduplication": 60000,
+  "sample_duplicates_removed": 481,
+  "cohort_rows": 59519,
+  "train_end": "2025-11-04 13:39:57.561000+00:00",
+  "validation_end": "2025-12-02 22:12:39.046000+00:00",
+  "split_counts": {
+    "train": 41663,
+    "validation": 8928,
+    "test": 8928
+  },
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "cohort_sha256": "fed76e7d6af7d8adebd00e0a8e2d7029d575f56048131806314b5186088464a1",
+  "cohort_price_quantiles_vnd": {
+    "0": 1000.0,
+    "0.01": 560000000.0,
+    "0.5": 7400000000.0,
+    "0.99": 128655999999.99977,
+    "1": 280280000000000.0
+  },
+  "cohort_missing_fraction": {
+    "area": 0.0,
+    "floor_count": 0.7620087703086409,
+    "frontage_width": 0.4790067037416623,
+    "house_depth": 0.9749995799660612,
+    "road_width": 0.809321393168568,
+    "bedroom_count": 0.46297820863925804,
+    "bathroom_count": 0.4972193753255263
+  }
+}

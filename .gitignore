@@ -1,5 +1,6 @@
 .venv/
 dataset/
+data/raw/
 
 # Generated data and artifacts (folders kept via .gitkeep)
 data/interim/*
@@ -8,6 +9,9 @@ models/*
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 !models/.gitkeep
+!models/*.ipynb
+reports/experiments/predictions/
+reports/experiments/figures/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/

@@ -1,0 +1,90 @@
+{
+  "model": "CatBoost",
+  "key": "catboost",
+  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "dataset": "vduydong/vietnam-real-estates",
+  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "pyarrow": "18.1.0",
+      "scikit-learn": "1.5.2",
+      "lightgbm": "4.5.0",
+      "catboost": "1.2.7",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "selected_parameters": {
+    "iterations": 400,
+    "learning_rate": 0.05,
+    "depth": 6,
+    "l2_leaf_reg": 7.0,
+    "loss_function": "RMSE",
+    "max_ctr_complexity": 1,
+    "border_count": 64,
+    "counter_calc_method": "SkipTest"
+  },
+  "tuning": [
+    {
+      "iterations": 400,
+      "learning_rate": 0.05,
+      "depth": 4,
+      "l2_leaf_reg": 3.0,
+      "loss_function": "RMSE",
+      "max_ctr_complexity": 1,
+      "border_count": 64,
+      "counter_calc_method": "SkipTest",
+      "MAE": 5279918192.369998,
+      "RMSE": 34117109161.991642,
+      "R2": 0.23014040193432828,
+      "MAPE": 356515.5681424445,
+      "fit_seconds": 7.998565099958796
+    },
+    {
+      "iterations": 400,
+      "learning_rate": 0.05,
+      "depth": 6,
+      "l2_leaf_reg": 7.0,
+      "loss_function": "RMSE",
+      "max_ctr_complexity": 1,
+      "border_count": 64,
+      "counter_calc_method": "SkipTest",
+      "MAE": 5154589364.930287,
+      "RMSE": 33815674219.86,
+      "R2": 0.24368418789005952,
+      "MAPE": 352237.0218689357,
+      "fit_seconds": 12.009631699998863
+    }
+  ],
+  "metrics": {
+    "validation": {
+      "MAE": 5154589364.930287,
+      "RMSE": 33815674219.86,
+      "R2": 0.24368418789005952,
+      "MAPE": 352237.0218689357
+    },
+    "test": {
+      "MAE": 37207498640.103165,
+      "RMSE": 2964647677804.3833,
+      "R2": 0.0011383328073214516,
+      "MAPE": 35.558827772240384
+    }
+  },
+  "prediction_files": {
+    "validation": {
+      "path": "reports/experiments/predictions/catboost_validation.parquet",
+      "sha256": "23db7668ad042b52d251037ac6e0af99cbcb5458017cbb1e5a7b1599bc4fffa6"
+    },
+    "test": {
+      "path": "reports/experiments/predictions/catboost_test.parquet",
+      "sha256": "785a60a66d783cbcd70e5fab639d269feaeacd9e5c2080f3fe1fbe3b7a343f82"
+    }
+  },
+  "extra": {
+    "best_iteration": 399
+  }
+}

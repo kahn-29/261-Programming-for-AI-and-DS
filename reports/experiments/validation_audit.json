@@ -1,0 +1,92 @@
+{
+  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "model_audit": [
+    {
+      "model": "Dummy Regressor",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "Median Price per sqm",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "Ridge Regression",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "Random Forest",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "LightGBM",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "CatBoost",
+      "prediction_and_metric_audit": "passed"
+    },
+    {
+      "model": "TF-IDF + Ridge",
+      "prediction_and_metric_audit": "passed"
+    }
+  ],
+  "notebook_audit": [
+    {
+      "notebook": "01_baseline_dummy_regressor.ipynb",
+      "code_cells": 8,
+      "embedded_figures": 1,
+      "rendered_tables": 10,
+      "status": "passed"
+    },
+    {
+      "notebook": "02_baseline_median_price.ipynb",
+      "code_cells": 8,
+      "embedded_figures": 1,
+      "rendered_tables": 11,
+      "status": "passed"
+    },
+    {
+      "notebook": "03_ridge_regression.ipynb",
+      "code_cells": 8,
+      "embedded_figures": 1,
+      "rendered_tables": 10,
+      "status": "passed"
+    },
+    {
+      "notebook": "04_random_forest.ipynb",
+      "code_cells": 9,
+      "embedded_figures": 2,
+      "rendered_tables": 10,
+      "status": "passed"
+    },
+    {
+      "notebook": "05_lightgbm.ipynb",
+      "code_cells": 9,
+      "embedded_figures": 2,
+      "rendered_tables": 10,
+      "status": "passed"
+    },
+    {
+      "notebook": "06_catboost.ipynb",
+      "code_cells": 9,
+      "embedded_figures": 2,
+      "rendered_tables": 10,
+      "status": "passed"
+    },
+    {
+      "notebook": "07_tfidf_ridge.ipynb",
+      "code_cells": 8,
+      "embedded_figures": 1,
+      "rendered_tables": 11,
+      "status": "passed"
+    }
+  ],
+  "finite_metrics": true,
+  "consistent_split": true,
+  "largest_recorded_test_price_vnd": 280280000000000.0,
+  "largest_price_listing_squared_error_share_range": [
+    0.9966652388209724,
+    0.9998847113258776
+  ]
+}

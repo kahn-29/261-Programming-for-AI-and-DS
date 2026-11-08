@@ -1,0 +1,87 @@
+{
+  "model": "LightGBM",
+  "key": "lightgbm",
+  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "dataset": "vduydong/vietnam-real-estates",
+  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "pyarrow": "18.1.0",
+      "scikit-learn": "1.5.2",
+      "lightgbm": "4.5.0",
+      "catboost": "1.2.7",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "selected_parameters": {
+    "n_estimators": 1500,
+    "learning_rate": 0.04,
+    "num_leaves": 63,
+    "max_depth": 10,
+    "min_child_samples": 60,
+    "reg_alpha": 1.0,
+    "reg_lambda": 5.0
+  },
+  "tuning": [
+    {
+      "n_estimators": 1500,
+      "learning_rate": 0.04,
+      "num_leaves": 31,
+      "max_depth": -1,
+      "min_child_samples": 40,
+      "reg_alpha": 0.1,
+      "reg_lambda": 1.0,
+      "MAE": 4522786085.503286,
+      "RMSE": 32712165067.22802,
+      "R2": 0.2922405829915262,
+      "MAPE": 330865.2211272697,
+      "fit_seconds": 2.018879100040067
+    },
+    {
+      "n_estimators": 1500,
+      "learning_rate": 0.04,
+      "num_leaves": 63,
+      "max_depth": 10,
+      "min_child_samples": 60,
+      "reg_alpha": 1.0,
+      "reg_lambda": 5.0,
+      "MAE": 4496199050.5157585,
+      "RMSE": 32757351739.057224,
+      "R2": 0.29028391757435,
+      "MAPE": 300784.69313676667,
+      "fit_seconds": 2.815582400013227
+    }
+  ],
+  "metrics": {
+    "validation": {
+      "MAE": 4496199050.5157585,
+      "RMSE": 32757351739.057224,
+      "R2": 0.29028391757435,
+      "MAPE": 300784.69313676667
+    },
+    "test": {
+      "MAE": 36477344778.0918,
+      "RMSE": 2964995648314.024,
+      "R2": 0.0009038396471560128,
+      "MAPE": 28.59444141149395
+    }
+  },
+  "prediction_files": {
+    "validation": {
+      "path": "reports/experiments/predictions/lightgbm_validation.parquet",
+      "sha256": "d958e247de79f9791ca2865cd377dfee5664a70ecc28d4d9f134dfcb3c75d301"
+    },
+    "test": {
+      "path": "reports/experiments/predictions/lightgbm_test.parquet",
+      "sha256": "8ef856cda74431787b0b31f80e0d8336027bd74330890d0963f45f979df2e248"
+    }
+  },
+  "extra": {
+    "best_iteration": 613
+  }
+}

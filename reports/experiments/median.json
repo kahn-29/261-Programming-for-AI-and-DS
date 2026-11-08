@@ -1,0 +1,62 @@
+{
+  "model": "Median Price per sqm",
+  "key": "median",
+  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "dataset": "vduydong/vietnam-real-estates",
+  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "pyarrow": "18.1.0",
+      "scikit-learn": "1.5.2",
+      "lightgbm": "4.5.0",
+      "catboost": "1.2.7",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "selected_parameters": {},
+  "tuning": [
+    {
+      "MAE": 13209360798.461561,
+      "RMSE": 649364204352.812,
+      "R2": -277.8969521079655,
+      "MAPE": 760002.1034879714,
+      "fit_seconds": 0.053157599992118776
+    }
+  ],
+  "metrics": {
+    "validation": {
+      "MAE": 13209360798.461561,
+      "RMSE": 649364204352.812,
+      "R2": -277.8969521079655,
+      "MAPE": 760002.1034879714
+    },
+    "test": {
+      "MAE": 39768818191.39385,
+      "RMSE": 2968655086029.2085,
+      "R2": -0.0015638782363522896,
+      "MAPE": 44.846908408537956
+    }
+  },
+  "prediction_files": {
+    "validation": {
+      "path": "reports/experiments/predictions/median_validation.parquet",
+      "sha256": "849f403917b27b30ce20aeca2482c93f0f5bae66e7f57b76d70e5aed3202b718"
+    },
+    "test": {
+      "path": "reports/experiments/predictions/median_test.parquet",
+      "sha256": "87f51b6aa953b1047c8b494310766923f1f8ab71d680c6ceaa5940f1f3cdf934"
+    }
+  },
+  "extra": {
+    "test_fallback_counts": {
+      "district_type": 8870,
+      "province_type": 53,
+      "type": 5
+    }
+  }
+}
