@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from . import config
-
 
 # ---------- reporting ----------
 def title_with_n(base: str, frame_name: str, n: int) -> str:
@@ -25,45 +23,11 @@ def normalize_text(series: pd.Series) -> pd.Series:
     return s.str.replace(r"\s+", " ", regex=True).str.strip()
 
 
-def soft_key_hash(frame: pd.DataFrame) -> pd.Series:
-    """Hash of normalized text columns + raw value columns (soft-duplicate key)."""
-    parts = {c: normalize_text(frame[c].astype("string")) for c in config.SOFT_KEY_TEXT_COLS}
-    for c in config.SOFT_KEY_VALUE_COLS:
-        parts[c] = frame[c]
-    return pd.util.hash_pandas_object(pd.DataFrame(parts, index=frame.index), index=False)
-
-
 # ---------- cleaning ----------
-def flag_above_quantile(series: pd.Series, q: float = 0.999, positive_only: bool = False) -> pd.Series:
-    """True where value exceeds the q-quantile of positive (or non-negative) values."""
-    ref = series[series > 0] if positive_only else series[series >= 0]
-    return series.gt(ref.quantile(q)).fillna(False)
-
-
-def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
-    """Copy ``raw``, parse datetime, add duplicate and validity flags. Never drops rows."""
-    out = raw.copy(deep=False)
-    out["published_at"] = pd.to_datetime(out["published_at"], errors="coerce")
-
-    out["is_exact_dup"] = out.duplicated(subset=config.EXPECTED_COLUMNS, keep="first")
-    out["soft_key"] = soft_key_hash(out)
-    out["is_soft_dup"] = out["soft_key"].duplicated(keep="first")
-
-    for col in config.NONPOSITIVE_FLAG_COLS:
-        out[f"flag_nonpositive_{col}"] = out[col].le(0).fillna(False)
-    for col in config.NEGATIVE_FLAG_COLS:
-        out[f"flag_negative_{col}"] = out[col].lt(0).fillna(False)
-    for col in config.EXTREME_UPPER_FLAG_COLS:
-        out[f"flag_extreme_{col}"] = flag_above_quantile(out[col], positive_only=(col == "area"))
-    return out
-
-
-def prepare_priced_data(clean: pd.DataFrame, low_q: float = 0.001, high_q: float = 0.999) -> pd.DataFrame:
-    """Keep rows with positive price and area; add price_per_m2 and its extreme flag."""
+def prepare_priced_data(clean: pd.DataFrame) -> pd.DataFrame:
+    """Keep rows with positive price and area; add price_per_m2."""
     priced = clean.loc[clean["price"].gt(0) & clean["area"].gt(0)].copy()
     priced["price_per_m2"] = priced["price"] / priced["area"]
-    lo, hi = priced["price_per_m2"].quantile([low_q, high_q])
-    priced["flag_extreme_price_per_m2"] = ~priced["price_per_m2"].between(lo, hi)
     return priced
 
 

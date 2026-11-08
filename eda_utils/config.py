@@ -32,10 +32,3 @@ CATEGORY_COLUMNS = [
     "house_direction",
     "balcony_direction",
 ]
-
-SOFT_KEY_TEXT_COLS = ["name", "province_name", "district_name", "ward_name"]
-SOFT_KEY_VALUE_COLS = ["area", "price"]
-
-NONPOSITIVE_FLAG_COLS = ["price", "area"]
-NEGATIVE_FLAG_COLS = ["floor_count", "bedroom_count", "bathroom_count"]
-EXTREME_UPPER_FLAG_COLS = ["area", "floor_count", "bedroom_count", "bathroom_count"]
