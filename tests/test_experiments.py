@@ -9,9 +9,9 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
-from experiments.data import NUMERIC, CATEGORICAL, redact_text, load_data
+from experiments.data import NUMERIC, CATEGORICAL, redact_text, load_data, split_fingerprint, normalize
 from experiments.estimators import MedianPricePerSqm, native_features, structured_preprocessor, text_pipeline
-from experiments.evaluation import inverse_log, metrics, select_candidate, comparison_table
+from experiments.evaluation import inverse_log, metrics, select_candidate, comparison_table, environment
 
 
 class ProtocolTests(unittest.TestCase):
@@ -86,15 +86,83 @@ class ProtocolTests(unittest.TestCase):
     def test_stale_artifacts_do_not_block_a_fresh_execution(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            stale = {"protocol_id": "old", "metrics": {"test": {"MAE": 999.}}}
-            fresh = {"protocol_id": "current", "metrics": {"test": {
+            manifest = {"split_sha256": "current", "source": {"revision": "r1"}}
+            stale = {"split_sha256": "old", "revision": "r1", "metrics": {"test": {"MAE": 999.}}}
+            fresh = {"split_sha256": "current", "revision": "r1", "metrics": {"test": {
                 "MAE": 1., "RMSE": 2., "R2": .5, "MAPE": 10.}}}
             (path / "dummy.json").write_text(json.dumps(stale), encoding="utf-8")
             (path / "ridge.json").write_text(json.dumps(fresh), encoding="utf-8")
-            with patch("experiments.evaluation.REPORTS", path), patch(
-                    "experiments.evaluation.protocol_id", return_value="current"):
-                table = comparison_table({})
+            with patch("experiments.evaluation.REPORTS", path):
+                table = comparison_table(manifest)
             self.assertEqual(table.Model.tolist(), ["Ridge Regression"])
+
+    def test_split_fingerprint_ignores_operating_system(self):
+        frame = pd.DataFrame({"row_id": ["a", "b"], "group_id": ["g1", "g2"],
+                              "split": ["train", "test"]})
+        with patch("os.linesep", "\n"):
+            unix = split_fingerprint(frame)
+        with patch("os.linesep", "\r\n"):
+            windows = split_fingerprint(frame)
+        self.assertEqual(unix, windows)
+
+    def test_environment_tolerates_missing_packages(self):
+        with patch("experiments.evaluation.PACKAGES", ["numpy", "surely-not-installed-pkg"]):
+            packages = environment()["packages"]
+        self.assertIsNotNone(packages["numpy"])
+        self.assertIsNone(packages["surely-not-installed-pkg"])
+
+    def test_accented_redaction_matches_tfidf_redaction(self):
+        from experiments.text_vi import redact_accented
+        samples = ["Bán đất 70m², giá 10,85 tỷ. Ô tô vào nhà, sổ đỏ chính chủ",
+                   "Căn hộ 2PN view biển; liên hệ [phone_number]",
+                   "Nhà mặt phố. Giá thỏa thuận! Hướng Đông Nam"]
+        for text in samples:
+            accented = redact_accented(text)
+            self.assertEqual(normalize(accented), redact_text(text))
+        self.assertEqual(redact_accented(samples[0]), "Bán đất Ô tô vào nhà sổ đỏ chính chủ")
+
+    def test_tabular_encoder_is_training_only_and_qualifies_locations(self):
+        from experiments.deep import TabularEncoder
+        base = {c: "__MISSING__" for c in CATEGORICAL}
+        base.update({n: 1.0 for n in NUMERIC})
+        train = pd.DataFrame([{**base, "province_name": p, "district_name": "Q1"}
+                              for p in ["HN"] * 5 + ["HCM"] * 5])
+        train.loc[0, "area"] = 1e9                       # extreme value
+        encoder = TabularEncoder(min_frequency=5).fit(train)
+        self.assertEqual(len(encoder.vocab_["district_name"]), 2)   # HN|Q1 and HCM|Q1
+        unseen = train.iloc[:1].assign(province_name="DN")
+        dense, codes = encoder.transform(unseen)
+        district = CATEGORICAL.index("district_name")
+        self.assertEqual(codes[0, district], 0)          # unseen -> rare/unseen index
+        self.assertTrue(np.isfinite(dense).all())
+        self.assertLessEqual(dense[0, NUMERIC.index("area")],
+                             (encoder.upper_["area"] - encoder.mean_["area"]) / encoder.std_["area"] + 1e-6)
+
+
+    def test_phobert_layerwise_lr_and_delayed_encoder_warmup(self):
+        import torch
+        from transformers import RobertaConfig, RobertaModel
+        from experiments.phobert import PhoBERTRegressor, layerwise_groups, warmup_linear
+        config = RobertaConfig(vocab_size=50, hidden_size=16, num_hidden_layers=2,
+                               num_attention_heads=2, intermediate_size=32,
+                               max_position_embeddings=40)
+        model = PhoBERTRegressor(RobertaModel(config), head_hidden=8)
+        groups = layerwise_groups(model, base_lr=1e-4, head_lr=1e-3, decay=0.5, weight_decay=0.01)
+        covered = {id(p) for group in groups for p in group["params"]}
+        expected = {id(p) for name, p in model.named_parameters() if ".pooler." not in f".{name}"}
+        self.assertEqual(covered, expected)
+        rates = {round(group["lr"], 10) for group in groups}
+        self.assertEqual(rates, {1e-3, 1e-4, 5e-5, 2.5e-5})   # head, layer1, layer0, embeddings
+        self.assertTrue(all(g["weight_decay"] == 0.0 for g in groups
+                            if any(p.ndim == 1 for p in g["params"])))
+        optimizer = torch.optim.AdamW(groups)
+        scheduler = warmup_linear(optimizer, warmup_steps=4, total_steps=20, encoder_start=5)
+        for _ in range(5):
+            optimizer.step(); scheduler.step()
+        head = [g["lr"] for g in optimizer.param_groups if g["is_head"]]
+        encoder = [g["lr"] for g in optimizer.param_groups if not g["is_head"]]
+        self.assertTrue(all(lr > 0 for lr in head))
+        self.assertTrue(all(0 < lr <= 0.25 * 1e-4 + 1e-12 for lr in encoder))  # first warm-up step
 
 
 if __name__ == "__main__":

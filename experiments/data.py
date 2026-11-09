@@ -33,6 +33,16 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def split_fingerprint(frame):
+    """SHA-256 of split membership, identical on every operating system.
+
+    The line terminator is fixed to CRLF because the frozen manifest was first
+    computed on Windows, where ``to_csv`` defaults to ``os.linesep``.
+    """
+    table = frame[["row_id", "group_id", "split"]].to_csv(index=False, lineterminator="\r\n")
+    return hashlib.sha256(table.encode()).hexdigest()
+
+
 def write_json(path, value):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False,
@@ -169,8 +179,7 @@ def prepare_data():
     frame["text"] = frame[TEXT].fillna("").agg(" . ".join, axis=1).map(redact_text)
     # Raw titles and descriptions are not retained in the modelling cache.
     frame = frame.drop(columns=TEXT).reset_index(drop=True)
-    split_digest = hashlib.sha256(
-        frame[["row_id", "group_id", "split"]].to_csv(index=False).encode()).hexdigest()
+    split_digest = split_fingerprint(frame)
     PROCESSED.mkdir(parents=True, exist_ok=True)
     path = PROCESSED / "experiment_cohort.parquet"
     frame.to_parquet(path, index=False)
@@ -202,8 +211,7 @@ def load_data():
     if manifest["protocol_version"] != PROTOCOL_VERSION or digest(path) != manifest["cohort_sha256"]:
         raise ValueError("Cohort integrity/protocol mismatch; rerun python -m experiments.prepare.")
     frame = pd.read_parquet(path)
-    actual = hashlib.sha256(frame[["row_id", "group_id", "split"]].to_csv(index=False).encode()).hexdigest()
-    if actual != manifest["split_sha256"]:
+    if split_fingerprint(frame) != manifest["split_sha256"]:
         raise ValueError("Split membership has changed")
     parts = {name: frame.loc[frame.split.eq(name)].reset_index(drop=True)
              for name in ["train", "validation", "test"]}

@@ -47,6 +47,28 @@ To execute from the notebook directory through the same runner:
 .\.venv\Scripts\python.exe -X utf8 scripts/execute_model_notebooks.py --from-models
 ```
 
+## Running the deep-learning notebooks on Google Colab
+
+The deep-learning notebooks (08 onward) need a GPU and run on Colab. The repository
+is private, so the code and frozen cohort travel as one zip instead of `git clone`:
+
+1. Locally, after preparation: `.venv/bin/python scripts/pack_colab.py`
+   writes `dist/colab_bundle.zip` (~17 MB).
+2. Upload it to Google Drive, create the folder `MyDrive/261-dl/` and unzip it there.
+   In a Colab cell: `!unzip -q -o /content/drive/MyDrive/colab_bundle.zip -d /content/drive/MyDrive/261-dl`.
+3. Open a notebook from `MyDrive/261-dl/models/`, choose *Runtime → GPU*. Its first
+   cell mounts Drive and changes into `MyDrive/261-dl`, so results written to
+   `reports/experiments/` persist on Drive after the session ends.
+4. Copy `reports/experiments/{key}.json`, `reports/experiments/predictions/` and the
+   executed notebook back into the local repository.
+
+Comparability rests on the task identity, not the machine. `protocol_id` hashes the
+protocol version, cohort checksum and split fingerprint only; the split fingerprint
+uses a fixed CRLF line terminator so it is identical on Windows, macOS and Linux.
+Each result also records its Python, platform, package versions (missing packages
+as `null`) and source-file hashes for audit. `comparison_table` and the summary
+audit accept any result with the current split fingerprint and source revision.
+
 The generator `scripts/build_model_notebooks.py` is provided for maintenance.
 Running it replaces notebook contents and clears outputs; it is not part of normal
 reproduction. Re-execute the notebooks after any regeneration. Editing shared

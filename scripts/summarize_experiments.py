@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from experiments.data import REPORTS, load_data, digest, write_json
-from experiments.evaluation import MODEL_NAMES, comparison_table, metrics, protocol_id
+from experiments.evaluation import (CORE_MODELS, MODEL_NAMES, comparison_table,
+                                    is_comparable, metrics, protocol_id)
 
 
 def main():
@@ -25,10 +26,13 @@ def main():
     largest_test_index = int(parts["test"].price.to_numpy().argmax())
     largest_test_price = float(parts["test"].price.max())
     squared_error_shares = []
-    for key in MODEL_NAMES:
+    missing = [key for key in CORE_MODELS if not (REPORTS / f"{key}.json").exists()]
+    assert not missing, f"Missing core model results: {missing}"
+    # Optional deep-learning models are audited only once their results exist.
+    keys = [key for key in MODEL_NAMES if (REPORTS / f"{key}.json").exists()]
+    for key in keys:
         record = json.loads((REPORTS / f"{key}.json").read_text(encoding="utf-8"))
-        assert record["protocol_id"] == expected_protocol
-        assert record["split_sha256"] == manifest["split_sha256"]
+        assert is_comparable(record, manifest), f"{key}: different task/split"
         for split in ["validation", "test"]:
             info = record["prediction_files"][split]
             path = ROOT / info["path"]
@@ -62,9 +66,9 @@ def main():
         notebook_status.append({"notebook": path.name, "code_cells": len(counts),
                                 "embedded_figures": figures, "rendered_tables": tables,
                                 "status": "passed"})
-    assert len(notebook_status) == 7
+    assert len(notebook_status) >= len(CORE_MODELS)
     table = comparison_table(manifest)
-    assert len(table) == 7
+    assert len(table) == len(keys), "Every saved result must be comparable"
     assert np.isfinite(table[["MAE", "RMSE", "R2", "MAPE"]].to_numpy()).all()
     table.to_csv(REPORTS / "comparison.csv", index=False, float_format="%.12g")
     fig, ax = plt.subplots(figsize=(8, 4), layout="constrained")
@@ -114,7 +118,7 @@ were trimmed for scoring. These descriptive estimates do not establish statistic
 
 The largest recorded test price is **{largest_test_price:,.0f} VND**. That single listing
 accounts for **{100 * min(squared_error_shares):.2f}%–{100 * max(squared_error_shares):.2f}%** of
-the total squared prediction error across the seven fitted models. This observed concentration
+the total squared prediction error across the {len(keys)} fitted models. This observed concentration
 limits the interpretability of aggregate RMSE and R². Its label is not externally verified;
 the protocol preserves it rather than revising the test set after observing predictions.
 
@@ -122,7 +126,7 @@ the protocol preserves it rather than revising the test set after observing pred
 
 ## Validation
 
-All seven notebooks executed from beginning to end, contain real outputs, rendered HTML tables,
+All {len(notebook_status)} notebooks executed from beginning to end, contain real outputs, rendered HTML tables,
 and embedded diagnostic figures, and share the same split fingerprint. Saved prediction row IDs,
 source target values, checksums, and recomputed metrics were audited for both validation and test.
 The audit passed for every model. `validation_audit.json` contains the machine-readable checks;
@@ -158,7 +162,7 @@ notebooks are versioned. Recreate the local predictions by executing the noteboo
         "largest_price_listing_squared_error_share_range": [min(squared_error_shares), max(squared_error_shares)],
     })
     print(table.to_string(index=False))
-    print("PASS: seven complete notebooks and all saved predictions audited.")
+    print(f"PASS: {len(notebook_status)} notebooks and {len(keys)} saved model results audited.")
 
 
 if __name__ == "__main__":
