@@ -1,4 +1,4 @@
-"""Generate the seven research notebooks from a consistent narrative structure."""
+"""Generate concise training notebooks using already preprocessed data."""
 
 from pathlib import Path
 import textwrap
@@ -16,7 +16,7 @@ def markdown(text):
     return nbf.v4.new_markdown_cell(textwrap.dedent(text).strip())
 
 
-SETUP = '''
+SETUP = r'''
 from pathlib import Path
 import os
 import sys
@@ -31,95 +31,33 @@ os.environ["OPENBLAS_NUM_THREADS"] = "2"
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from IPython.display import display, Markdown
-from experiments.data import load_data, SEED, NUMERIC, CATEGORICAL
+from IPython.display import display
+from experiments.data import load_data, default_data_path, SEED, NUMERIC, CATEGORICAL
 from experiments.evaluation import (
     select_candidate, inverse_log, record_result, diagnostics,
-    importance_plot, comparison_table, environment,
+    importance_plot, comparison_table,
 )
 from experiments.estimators import (
     structured_preprocessor, native_features, catboost_features,
-    text_pipeline, MedianPricePerSqm,
+    text_pipeline, text_inputs, MedianPricePerSqm,
 )
 
 np.random.seed(SEED)
-plt.rcParams.update({"figure.dpi": 110, "font.size": 10, "axes.spines.top": False,
-                     "axes.spines.right": False, "savefig.dpi": 300})
-parts, manifest = load_data()
+plt.rcParams.update({"figure.dpi": 110, "font.size": 10,
+                     "axes.spines.top": False, "axes.spines.right": False})
+DATA_PATH = default_data_path()  # Replace with another preprocessed Parquet path if needed.
+'''
+
+INPUT = r'''
+parts, manifest = load_data(DATA_PATH)
 train, validation, test = (parts[name] for name in ["train", "validation", "test"])
 y_train = train.price.to_numpy()
 y_validation = validation.price.to_numpy()
 log_y_train = np.log1p(y_train)
 log_y_validation = np.log1p(y_validation)
-display(pd.Series({"Seed": SEED, "Dataset": manifest["source"]["dataset"],
-                   "Revision": manifest["source"]["revision"],
-                   "Split SHA-256": manifest["split_sha256"]}, name="Setting").to_frame())
-display(pd.Series(environment()["packages"], name="Installed version").to_frame())
-'''
-
-OVERVIEW = '''
-display(pd.DataFrame([
-    {"Split": name, "Listings": len(frame),
-     "First publication (UTC)": frame.published_at.min(),
-     "Last publication (UTC)": frame.published_at.max()}
-    for name, frame in parts.items()
-]).set_index("Split"))
-display(pd.DataFrame({"Training dtype": train[NUMERIC + CATEGORICAL].dtypes.astype(str),
-                      "Training missing fraction": train[NUMERIC + CATEGORICAL].replace(
-                          "__MISSING__", np.nan).isna().mean()}))
-display(train.price.describe(percentiles=[.01, .5, .99]).rename("Training asking price (VND)").to_frame())
-display(Markdown(
-    f"All {manifest['counts']['raw_rows']:,} source rows were inspected; "
-    f"{manifest['counts']['eligible_rows']:,} were eligible. A fixed-seed uniform sample of "
-    f"{manifest['sampled_rows_before_deduplication']:,} eligible rows was drawn across all five shards. "
-    f"Removing {manifest['sample_duplicates_removed']:,} repeated identity proxies left "
-    f"{manifest['cohort_rows']:,} listings. These are sample-based experiments, not full-corpus model fits."
-))
-'''
-
-PREPROCESSING = '''
-Raw Parquet files remain unchanged. Eligibility requires finite, positive `price` and `area`,
-and a parseable `published_at`. Titles explicitly advertising rental without sale or transfer
-language are excluded using a fixed rule. The source has no transaction-type or verified-sale
-label; undetected rentals and incorrectly extracted amounts remain possible. Other negative or
-non-finite numeric attributes become missing. No price quantile filtering, target-dependent
-outlier removal, or retrospective unit correction is applied.
-
-ISO-8601 timestamps are parsed with and without fractional seconds. Offset-free timestamps
-are assigned UTC for consistent ordering; the source does not establish their true timezone.
-Publication timestamps cover multiple months. A chronological 70/15/15 split approximates
-prediction on subsequently published listings. Boundaries are fixed once from feature timestamps.
-Within the sampled cohort, an identity proxy combines a normalized title with numeric substrings
-masked, province, district, ward, and area rounded to two decimals. Only its earliest sampled
-record is retained before splitting. This target-free proxy is unique across all partitions;
-it is not a verified property identifier and cannot eliminate every repost or near duplicate.
-There is no spatial holdout, and performance outside the observed locations is unmeasured.
-
-Only training data fit imputation, scaling, encodings, category vocabularies, group medians,
-or TF-IDF. Validation selects candidate hyperparameters and early-stopping iterations. The
-selected training-fitted model is evaluated once on the test partition; validation is not
-merged back into training. Test outcomes are descriptive and must not be used to revise the search.
-'''
-
-FEATURES = '''
-Structured models use the seven physical attributes (`area`, `floor_count`, `frontage_width`,
-`house_depth`, `road_width`, `bedroom_count`, `bathroom_count`) and eight categorical attributes
-(`property_type_name`, `province_name`, `district_name`, `ward_name`, `street_name`,
-`project_name`, `house_direction`, `balcony_direction`). Price, price per square metre,
-duplicate keys, source row identifiers, and split labels are excluded from model inputs.
-Publication time controls the split and is not a predictor.
-
-The text-only experiment concatenates `name` and `description`. Fixed normalization removes
-Vietnamese accents; monetary clauses and all tokens containing digits are discarded, including
-embedded numeric price abbreviations. This conservative redaction limits direct price copying
-but also removes useful physical quantities. It cannot establish that all semantic price cues
-are absent. No test-dependent redaction or vocabulary fitting is performed.
-
-Nonbaseline estimators fit `log1p(price)` to reduce sensitivity during training to the long
-price tail. Inverse-transformed predictions are bounded between zero and the maximum training
-price using training information only. This bound stabilizes extrapolation and can underpredict
-new high-price listings. No lognormal bias correction is applied. All selection and reported
-metrics use original VND prices. The two baselines fit original-scale prices directly.
+display(pd.Series({"Input": manifest["input_path"], "Seed": SEED,
+                   "Split": manifest["split_method"],
+                   **manifest["split_counts"]}, name="Training settings").to_frame())
 '''
 
 SPECS = [
@@ -272,10 +210,10 @@ importance_plot("catboost", model.feature_names_, model.feature_importances_,
          implementation='''
 def fit_candidate(parameters):
     estimator = text_pipeline(**parameters)
-    return estimator.fit(train.text, log_y_train)
+    return estimator.fit(text_inputs(train), log_y_train)
 
 def predict_frame(estimator, frame):
-    return inverse_log(estimator.predict(frame.text), y_train)
+    return inverse_log(estimator.predict(text_inputs(frame)), y_train)
 ''', grid='''
 candidates = [
     {"ngram_range": (1, 1), "max_features": 30000, "min_df": 3, "max_df": .95, "alpha": 10.0},
@@ -285,8 +223,8 @@ candidates = [
 ]
 ''', extra='''
 extra["vocabulary_size"] = len(model.named_steps["tfidf"].vocabulary_)
-display(pd.Series({"Training empty text fraction": train.text.eq("").mean(),
-                   "Test empty text fraction": test.text.eq("").mean(),
+display(pd.Series({"Training empty text fraction": text_inputs(train).eq("").mean(),
+                   "Test empty text fraction": text_inputs(test).eq("").mean(),
                    "Fitted vocabulary size": extra["vocabulary_size"]}).to_frame("Value"))
 ''', discussion="Text redaction reduces the risk of copying the target from the advertisement, at the cost of deleting quantities such as area and room counts. Whitespace tokenization after accent normalization is reproducible but is not a dedicated Vietnamese word-segmentation model. Residual price-related semantics may persist."),
 ]
@@ -294,33 +232,25 @@ display(pd.Series({"Training empty text fraction": train.text.eq("").mean(),
 
 def build(spec):
     key = spec["key"]
+    method = spec["method"].split(" An initial 1,000-iteration search")[0]
     cells = [
-        markdown(f"# {spec['title']}: Property Asking-Price Prediction\n\n## 1. Title and Objective\n\n{spec['objective']}\n\nSource: [vduydong/vietnam-real-estates](https://huggingface.co/datasets/vduydong/vietnam-real-estates), revision `a9a66ffa985edcf76b4be59ae2c6f5b1db889c38`. The dataset credits TiniX AI and specifies CC BY-NC 4.0. The outcome is the recorded asking price in VND, not a verified transaction price."),
-        markdown("## 2. Experimental Setup\n\nRun `python -m experiments.prepare` once from the repository root. This notebook then executes independently from the repository root or `models/`, uses the frozen cohort, and never downloads data implicitly. Exact dependencies are recorded in `requirements-experiments-lock.txt`."),
-        code(SETUP), markdown("## 3. Dataset Overview\n\nThe following tables are computed from the verified cohort. Feature missingness and price summaries describe training data only."),
-        code(OVERVIEW), markdown("## 4. Data Preprocessing\n\n" + PREPROCESSING),
-        code('''
-assert set(NUMERIC + CATEGORICAL).isdisjoint({"price", "price_per_m2", "group_id", "row_id", "split"})
-assert train.published_at.max() < validation.published_at.min()
-assert validation.published_at.max() < test.published_at.min()
-assert train.group_id.is_unique and validation.group_id.is_unique and test.group_id.is_unique
-assert set(train.group_id).isdisjoint(validation.group_id)
-assert set(train.group_id).isdisjoint(test.group_id)
-assert set(validation.group_id).isdisjoint(test.group_id)
-'''),
-        markdown("## 5. Feature Engineering\n\n" + FEATURES),
-        markdown("## 6. Model Implementation\n\n" + spec["method"]), code(spec["implementation"]),
-        markdown("## 7. Hyperparameter Configuration\n\nThe following candidates are prespecified. Selection minimizes validation MAE in VND. Baselines have one fixed configuration; they do not use validation targets to fit their parameters."),
+        markdown(f"# {spec['title']}\n\nTraining and evaluation on preprocessed property listings. EDA and dataset cleaning belong to `notebooks/`.\n\n## 1. Setup"),
+        code(SETUP),
+        markdown("## 2. Load Preprocessed Data\n\nThe default input is `data/processed/priced_listings.parquet`, exported by the EDA notebook. If it is absent, the existing `experiment_cohort.parquet` is used and its path is displayed below. Set `DATA_PATH` to select a file explicitly. Existing split labels are reused; otherwise a shared 70/15/15 split is created. Every input row is retained. No source download, EDA, cleaning, sampling, or deduplication runs here."),
+        code(INPUT),
+        markdown("## 3. Model\n\n" + method + "\n\nOnly training observations fit imputation, encoding, scaling, or TF-IDF. Nonbaseline estimators learn log1p prices and reverse the transformation for evaluation; predictions are bounded by the training price range. Target-derived columns are excluded from the predictors."),
+        code(spec["implementation"]),
+        markdown("## 4. Hyperparameters\n\nSelect the candidate with the lowest validation MAE in VND. Test targets are not used for selection."),
         code(spec["grid"] + '\ndisplay(pd.DataFrame(candidates))'),
-        markdown("## 8. Model Training\n\nEach candidate fits training observations. The selected fitted candidate is retained without refitting on validation data. Reported times include fitting and validation prediction and depend on hardware."),
-        code('''
+        markdown("## 5. Train"),
+        code(r'''
 model, selected_parameters, tuning_results = select_candidate(
     candidates, fit_candidate, y_validation,
     lambda estimator: predict_frame(estimator, validation))
 display(tuning_results)
 display(pd.Series(selected_parameters, dtype=object, name="Selected value").to_frame())
 '''),
-        markdown("## 9. Evaluation\n\nMAE and RMSE are expressed in VND. R² is unitless; MAPE is a percentage and is defined because all eligible prices are strictly positive. Very small recorded prices can dominate MAPE, so it is secondary to MAE. Metrics use the complete partitions, including extreme values. The residual histogram displays only the central 98% range; no observations are removed from scoring. Scatterplots display at most 3,000 fixed-seed test observations."),
+        markdown("## 6. Evaluate and Save Results\n\nMAE and RMSE use original VND prices; R-squared is unitless and MAPE is a percentage. Metrics include every evaluation row. The residual histogram displays the central 98% range without changing scoring. Results and row-aligned predictions are saved under `reports/experiments/`."),
         code(f'''
 validation_prediction = predict_frame(model, validation)
 test_prediction = predict_frame(model, test)
@@ -336,22 +266,11 @@ diagnostics("{key}", test.price, test_prediction)
     ]
     if "importance" in spec:
         cells.append(code(spec["importance"]))
-    cells.extend([
-        markdown("## 10. Results and Discussion\n\n" + spec["discussion"] + "\n\nThe comparison table contains only completed models with an identical protocol and split fingerprint. Missing or incompatible previous model results have no row until re-executed; no scores are imputed. The final summary audit requires all seven models to match. Rankings are descriptive for this cohort. They do not establish statistical significance or performance on verified sales."),
-        code('''
+    cells.append(code(r'''
 comparison = comparison_table(manifest)
 display(comparison.style.format({"MAE": "{:,.0f}", "RMSE": "{:,.0f}",
                                  "R2": "{:.4f}", "MAPE": "{:,.2f}"}))
-score = result["metrics"]["test"]
-display(Markdown(
-    f"The held-out test evaluation gives MAE **{score['MAE']:,.0f} VND**, "
-    f"RMSE **{score['RMSE']:,.0f} VND**, R² **{score['R2']:.4f}**, "
-    f"and MAPE **{score['MAPE']:,.2f}%**. These observed values describe "
-    "the frozen temporal cohort and the recorded asking-price labels."
-))
-'''),
-        markdown("## 11. Conclusion\n\nThis notebook provides an executed, auditable estimate under the shared temporal protocol. Source checksums, split identity, candidate settings, environment versions, predictions, and original-scale metrics are recorded as artifacts. Interpretation is limited by sample-based training, a heuristic entity proxy, extreme or incorrectly extracted prices, incomplete attributes, possible mixed transaction types, and a single temporal holdout. A separate verified-sale dataset and repeated temporal backtesting are required before deployment or broad market claims."),
-    ])
+'''))
     notebook = nbf.v4.new_notebook(cells=cells)
     notebook.metadata = {
         "kernelspec": {"display_name": "Python 3.12 (Real Estate .venv)", "language": "python", "name": "python3"},
@@ -359,9 +278,8 @@ display(Markdown(
     }
     for index, cell in enumerate(notebook.cells):
         cell.id = f"{key}-{index:02d}"
-    path = ROOT / "models" / spec["filename"]
-    nbf.write(notebook, path)
-    print(path.name)
+    nbf.write(notebook, ROOT / "models" / spec["filename"])
+    print(spec["filename"])
 
 
 if __name__ == "__main__":

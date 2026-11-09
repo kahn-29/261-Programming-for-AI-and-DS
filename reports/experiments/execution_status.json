@@ -1,57 +1,57 @@
 [
   {
     "notebook": "01_baseline_dummy_regressor.ipynb",
-    "seconds": 4.288965300016571,
-    "executed_at_utc": "2026-11-08T11:20:03.169665+00:00",
-    "code_cells": 8,
+    "seconds": 12.604475200001616,
+    "executed_at_utc": "2026-11-09T03:24:10.859635+00:00",
+    "code_cells": 7,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "02_baseline_median_price.ipynb",
-    "seconds": 5.430233300023247,
-    "executed_at_utc": "2026-11-08T11:20:08.606352+00:00",
-    "code_cells": 8,
+    "seconds": 9.708872699993663,
+    "executed_at_utc": "2026-11-09T03:24:20.582654+00:00",
+    "code_cells": 7,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "03_ridge_regression.ipynb",
-    "seconds": 5.467075799999293,
-    "executed_at_utc": "2026-11-08T11:20:14.083228+00:00",
-    "code_cells": 8,
+    "seconds": 11.600172199949156,
+    "executed_at_utc": "2026-11-09T03:24:32.204920+00:00",
+    "code_cells": 7,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "04_random_forest.ipynb",
-    "seconds": 126.91566460003378,
-    "executed_at_utc": "2026-11-08T11:22:21.005703+00:00",
-    "code_cells": 9,
+    "seconds": 676.374283800018,
+    "executed_at_utc": "2026-11-09T03:35:48.580391+00:00",
+    "code_cells": 8,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "05_lightgbm.ipynb",
-    "seconds": 9.517813200014643,
-    "executed_at_utc": "2026-11-08T11:22:30.532028+00:00",
-    "code_cells": 9,
+    "seconds": 21.993263399985153,
+    "executed_at_utc": "2026-11-09T03:36:10.571812+00:00",
+    "code_cells": 8,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "06_catboost.ipynb",
-    "seconds": 23.983310499985237,
-    "executed_at_utc": "2026-11-08T11:22:54.521385+00:00",
-    "code_cells": 9,
+    "seconds": 48.362894400022924,
+    "executed_at_utc": "2026-11-09T03:36:58.939336+00:00",
+    "code_cells": 8,
     "status": "passed",
     "working_directory": "."
   },
   {
     "notebook": "07_tfidf_ridge.ipynb",
-    "seconds": 24.747979299980216,
-    "executed_at_utc": "2026-11-08T11:23:19.275872+00:00",
-    "code_cells": 8,
+    "seconds": 38.033937800035346,
+    "executed_at_utc": "2026-11-09T03:37:36.976134+00:00",
+    "code_cells": 7,
     "status": "passed",
     "working_directory": "."
   }

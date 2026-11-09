@@ -30,7 +30,7 @@ def environment():
 def protocol_id(manifest):
     sources = {name: hashlib.sha256((ROOT / "experiments" / name).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
                for name in ["data.py", "estimators.py", "evaluation.py"]}
-    value = {"cohort": manifest["cohort_sha256"], "split": manifest["split_sha256"],
+    value = {"input": manifest["input_sha256"], "split": manifest["split_sha256"],
              "source_code": sources, "environment": environment()}
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -84,11 +84,12 @@ def record_result(key, manifest, parts, validation_prediction, test_prediction,
                       "predicted_vnd": prediction}).to_parquet(path, index=False)
         prediction_files[split] = {"path": path.relative_to(ROOT).as_posix(), "sha256": digest(path)}
     result = {"model": MODEL_NAMES[key], "key": key, "protocol_id": protocol_id(manifest),
-              "split_sha256": manifest["split_sha256"], "dataset": manifest["source"]["dataset"],
-              "revision": manifest["source"]["revision"], "environment": environment(),
+              "split_sha256": manifest["split_sha256"], "input_path": manifest["input_path"],
+              "input_sha256": manifest["input_sha256"], "environment": environment(),
               "selected_parameters": parameters, "tuning": tuning.to_dict(orient="records"),
               "metrics": results, "prediction_files": prediction_files, "extra": extra or {}}
     write_json(REPORTS / f"{key}.json", result)
+    write_json(REPORTS / "data_manifest.json", manifest)
     table = pd.DataFrame(results).T.rename_axis("Split")
     return result, table
 

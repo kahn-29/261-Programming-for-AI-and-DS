@@ -9,8 +9,9 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
-from experiments.data import NUMERIC, CATEGORICAL, redact_text, load_data
-from experiments.estimators import MedianPricePerSqm, native_features, structured_preprocessor, text_pipeline
+from experiments.data import NUMERIC, CATEGORICAL, load_data, default_data_path, digest
+from experiments.estimators import (MedianPricePerSqm, native_features, structured_preprocessor,
+                                    text_pipeline, text_inputs, redact_text)
 from experiments.evaluation import inverse_log, metrics, select_candidate, comparison_table
 
 
@@ -79,9 +80,68 @@ class ProtocolTests(unittest.TestCase):
 
     def test_frozen_cohort_temporal_and_entity_separation(self):
         parts, manifest = load_data()
-        self.assertEqual(manifest["source"]["dataset"], "vduydong/vietnam-real-estates")
-        self.assertEqual(manifest["counts"]["raw_rows"], 1_000_000)
-        self.assertEqual(sum(map(len, parts.values())), manifest["cohort_rows"])
+        self.assertEqual(sum(map(len, parts.values())), manifest["input_rows"])
+        for left, right in [("train", "validation"), ("train", "test"), ("validation", "test")]:
+            self.assertTrue(set(parts[left].row_id).isdisjoint(parts[right].row_id))
+
+    @staticmethod
+    def processed_fixture():
+        frame = pd.DataFrame({name: np.arange(1., 31.) for name in NUMERIC})
+        for name in CATEGORICAL:
+            frame[name] = pd.Categorical(["known", None] * 15)
+        frame["price"] = np.arange(1., 31.) * 1000
+        frame["published_at"] = pd.date_range("2025-01-01", periods=30)
+        frame["name"] = "House near park"
+        frame["description"] = "Garden and balcony"
+        return frame
+
+    def test_eda_output_is_read_without_filtering_or_overwriting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "priced_listings.parquet"
+            frame = self.processed_fixture()
+            frame.to_parquet(path, index=False)
+            before = digest(path)
+            parts, manifest = load_data(path)
+            self.assertEqual(manifest["input_rows"], len(frame))
+            self.assertEqual(sum(map(len, parts.values())), len(frame))
+            self.assertEqual(before, digest(path))
+            self.assertEqual(manifest["split_counts"], {"train": 21, "validation": 4, "test": 5})
+            self.assertEqual(text_inputs(parts["train"]).iloc[0], "house near park garden and balcony")
+            features, _ = native_features(parts["train"])
+            self.assertFalse(features[CATEGORICAL].isna().any().any())
+
+    def test_existing_split_and_all_rows_are_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "processed.parquet"
+            frame = self.processed_fixture()
+            frame["split"] = ["test", "validation", "train"] * 10
+            frame.to_parquet(path, index=False)
+            parts, _ = load_data(path)
+            for name, part in parts.items():
+                np.testing.assert_array_equal(part.price, frame.loc[frame.split.eq(name), "price"])
+
+    def test_eda_output_precedes_legacy_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            with patch("experiments.data.PROCESSED", directory), patch.dict("os.environ", {}, clear=True):
+                (directory / "experiment_cohort.parquet").touch()
+                self.assertEqual(default_data_path().name, "experiment_cohort.parquet")
+                (directory / "priced_listings.parquet").touch()
+                self.assertEqual(default_data_path().name, "priced_listings.parquet")
+
+    def test_invalid_processed_target_is_rejected_instead_of_dropped(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "processed.parquet"
+            frame = self.processed_fixture()
+            frame.loc[0, "price"] = -1
+            frame.to_parquet(path, index=False)
+            with self.assertRaisesRegex(ValueError, "no rows are filtered"):
+                load_data(path)
+
+    def test_missing_input_never_triggers_preparation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(FileNotFoundError, "Model notebooks do not run EDA"):
+                load_data(Path(directory) / "missing.parquet")
 
     def test_stale_artifacts_do_not_block_a_fresh_execution(self):
         with tempfile.TemporaryDirectory() as directory:

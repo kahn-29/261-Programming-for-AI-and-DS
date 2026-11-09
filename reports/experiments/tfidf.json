@@ -1,10 +1,10 @@
 {
   "model": "TF-IDF + Ridge",
   "key": "tfidf",
-  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
-  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
-  "dataset": "vduydong/vietnam-real-estates",
-  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "protocol_id": "0eb966c9386334c0ee99e95e51e543f894549240b2e25359daf668fab37422f4",
+  "split_sha256": "0a9c1f107e0483f3d08c54f25982f7b35f7222089dab4824eb568b26a2c93a52",
+  "input_path": "data/processed/experiment_cohort.parquet",
+  "input_sha256": "fed76e7d6af7d8adebd00e0a8e2d7029d575f56048131806314b5186088464a1",
   "environment": {
     "python": "3.12.10",
     "platform": "Windows-11-10.0.26200-SP0",
@@ -42,7 +42,7 @@
       "RMSE": 37205155901.09992,
       "R2": 0.08446840607163564,
       "MAPE": 27193.530760019337,
-      "fit_seconds": 1.8845998999895528
+      "fit_seconds": 4.122007600031793
     },
     {
       "ngram_range": [
@@ -57,7 +57,7 @@
       "RMSE": 38058073303.16467,
       "R2": 0.04201066326878433,
       "MAPE": 38870.01626477041,
-      "fit_seconds": 2.4565009999787435
+      "fit_seconds": 3.923345100018196
     },
     {
       "ngram_range": [
@@ -72,7 +72,7 @@
       "RMSE": 36842830718.775635,
       "R2": 0.10221352246716597,
       "MAPE": 20910.5478768919,
-      "fit_seconds": 5.791929400002118
+      "fit_seconds": 9.072819799999706
     },
     {
       "ngram_range": [
@@ -87,7 +87,7 @@
       "RMSE": 38403035609.264725,
       "R2": 0.024565328281360932,
       "MAPE": 46467.38935334298,
-      "fit_seconds": 6.886662499979138
+      "fit_seconds": 9.630781600018963
     }
   ],
   "metrics": {
