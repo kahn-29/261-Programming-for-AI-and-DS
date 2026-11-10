@@ -3,17 +3,17 @@
 
 \subsection{Dataset Choice}
 
-This project addresses house price prediction for the Vietnamese market. The selected data source is the public Hugging Face dataset \texttt{tinixai/vietnam-real-estates} (\textit{Tinix Vietnam Real Estate Listings 2025--2026}), curated and published by TiniX AI~\cite{tinix_vietnam_real_estate_2025_2026}. According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings spanning June 2025 to March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
+This project addresses house price prediction for the Vietnamese market. The selected data source is the public dataset \textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2025_2026}. According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings spanning June 2025 to March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
 
 The dataset was preferred over smaller or older alternatives for three practical reasons. First, its scale (over 3.5 million records) supports stable exploratory analysis and supervised learning across regions and property types. Second, the schema already includes the target variable (\texttt{price}) together with location, physical attributes, and free-text fields that are commonly used in real-estate valuation. Third, the publisher explicitly lists real-estate price prediction among the intended use cases, which aligns with the course assignment.
 
 \subsection{Feature Meanings}
 
-Table~\ref{tab:feature-meanings} reproduces the data schema from the published Hugging Face dataset card. The descriptions below are taken from that page and are not reinterpreted here.
+Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}. The descriptions below are taken from that page and are not reinterpreted here.
 
 \begin{table}[htbp]
 \centering
-\caption{Feature meanings from the published dataset card of \texttt{tinixai/vietnam-real-estates}.}
+\caption{Feature meanings from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.}
 \label{tab:feature-meanings}
 \small
 \begin{tabular}{llp{7.2cm}}
