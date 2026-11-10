@@ -1,150 +1,91 @@
-# Reproducible property asking-price experiments
+# Model training on preprocessed data
 
-The seven notebooks in `models/` implement a shared temporal benchmark using
-[vduydong/vietnam-real-estates](https://huggingface.co/datasets/vduydong/vietnam-real-estates),
-revision `a9a66ffa985edcf76b4be59ae2c6f5b1db889c38`. The source card credits
-TiniX AI and specifies CC BY-NC 4.0. This benchmark uses the explicitly selected
-one-million-row source; the earlier EDA notebook retains its original data source.
+EDA and dataset preprocessing belong to the existing notebooks in `notebooks/`.
+The seven notebooks in `models/` only load the resulting data, train models,
+evaluate them, and save results. They do not read raw shards, download datasets,
+filter rows, create samples, deduplicate listings, or regenerate processed data.
 
-## Running the experiments
+## Input
 
-Use Python 3.12. From the project root on Windows:
+The default input is `data/processed/priced_listings.parquet`, the output declared
+by `notebooks/01_eda_data-quality.ipynb`. If it is absent, the existing
+`data/processed/experiment_cohort.parquet` cache is used. Every notebook displays
+its actual input path and split sizes. The EDA export is currently absent locally;
+the committed execution results use the existing processed cache, unchanged.
+
+Set `DATA_PATH` in a notebook to select another preprocessed Parquet file.
+To choose the same file for all notebooks and the summary command, use:
 
 ```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-experiments-lock.txt
-.\.venv\Scripts\python.exe -X utf8 -m experiments.prepare
-.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -v
+$env:EXPERIMENT_DATA_PATH = "data/processed/priced_listings.parquet"
+```
+
+An explicitly selected missing file raises an error; it never triggers a download
+or preparation step. No large dataset files are committed.
+
+The input must have numeric `price`, the seven numeric physical attributes, and
+the eight categorical attributes listed in `experiments/data.py`. Price and area
+must already be finite and positive. Numeric missing values remain available for
+train-fitted model imputation. Invalid targets are reported rather than silently
+dropped. Extra EDA columns such as `price_per_m2`, flags, and duplicate statistics
+are not used as predictors.
+
+TF-IDF uses an existing prepared `text` column when supplied. Otherwise it combines
+`name` and/or `description`, removing monetary clauses and digit-bearing tokens
+as model-specific feature construction to reduce direct target copying. Vocabulary
+and IDF weights are learned only from training observations.
+
+## Shared split
+
+- A supplied `split` column containing `train`, `validation`, and `test` is preserved.
+- Without split labels, `published_at` supplies a chronological 70/15/15 split.
+  ISO-8601 dates accept variable fractional seconds; offset-free dates are assigned
+  UTC for ordering. The true source timezone is not inferred.
+- Without timestamps, a seed-42 random 70/15/15 split is used.
+- All input rows are retained. Existing `row_id` values are preserved; otherwise
+  row positions identify predictions. If `group_id` is supplied, overlapping groups
+  across splits cause an error. Entity cleaning and deduplication remain upstream.
+
+## Run
+
+Use the existing Python 3.12 environment. From the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-experiments.txt
 .\.venv\Scripts\python.exe -X utf8 scripts/execute_model_notebooks.py
 .\.venv\Scripts\python.exe -X utf8 scripts/summarize_experiments.py
 ```
 
-`requirements-experiments.txt` lists direct requirements on top of the existing
-project requirements. `requirements-experiments-lock.txt` captures the exact
-installed package versions used for the executed results, including the existing
-project dependencies; its Windows-specific packages target Windows reproduction.
+Each notebook also runs independently in Jupyter from the project root or `models/`.
+No EDA notebook needs to run again when its processed output already exists.
+`requirements-experiments-lock.txt` records the validated Windows environment.
 
-Preparation downloads approximately 469 MB across five source shards, verifies
-their published LFS checksums, profiles every source row in bounded-memory batches,
-and writes an immutable-source manifest and a derived modelling cohort. It never
-overwrites raw Parquet files. An existing source file with an unexpected checksum
-causes an error. There are no implicit downloads when opening a model notebook.
+The models are mean-price DummyRegressor, district/type median price per square
+metre, structured Ridge, Random Forest, LightGBM, CatBoost, and text-only TF-IDF +
+Ridge. Validation MAE selects hyperparameters. Boosting additionally uses early
+stopping on validation log-RMSE. Models are not refitted on validation data.
+Imputation, scaling, encoding, group medians, and TF-IDF fit training data only.
+CatBoost categorical frequency statistics exclude validation predictors.
 
-After preparation, any notebook executes independently from the project root or
-`models/`; select the project's `.venv` kernel. Sequential execution limits memory
-pressure. Both the model search and numeric-library thread counts are bounded.
-Runtime depends on the machine; actual runtimes are in the execution report.
+Nonbaseline models fit log1p prices, invert predictions, and bound them using the
+maximum training price. Every model is scored in original VND units with MAE,
+RMSE, R-squared, and percentage MAPE. Supplied extreme values are retained in scoring.
 
-The initial CatBoost grid (1,000 iterations; depths 6 and 8) exceeded the
-1,800-second cell execution budget. The final, fully executed experiment uses
-400 iterations, depths 4 and 6, at most one categorical feature per internal
-statistic, and 64 numeric borders. The data and evaluation split were unchanged;
-the adjustment addressed computation rather than observed test performance.
+## Results and validation
 
-To execute from the notebook directory through the same runner:
+`reports/experiments/summary.md` and `comparison.csv` contain the actual results.
+Per-model JSON files record the selected settings, metrics, input checksum, and
+split fingerprint. Predictions remain local under `reports/experiments/predictions/`.
+Figures are embedded in the notebooks and exported locally as PDFs. The summary
+audit verifies prediction alignment, target values, metrics, and completed outputs.
+
+Run controlled tests with:
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 scripts/execute_model_notebooks.py --from-models
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -v
 ```
 
-## Running the deep-learning notebooks on Google Colab
-
-The deep-learning notebooks (08 onward) need a GPU and run on Colab. The repository
-is private, so the code and frozen cohort travel as one zip instead of `git clone`:
-
-1. Locally, after preparation: `.venv/bin/python scripts/pack_colab.py`
-   writes `dist/colab_bundle.zip` (~17 MB).
-2. Upload it to Google Drive, create the folder `MyDrive/261-dl/` and unzip it there.
-   In a Colab cell: `!unzip -q -o /content/drive/MyDrive/colab_bundle.zip -d /content/drive/MyDrive/261-dl`.
-3. Open a notebook from `MyDrive/261-dl/models/`, choose *Runtime → GPU*. Its first
-   cell mounts Drive and changes into `MyDrive/261-dl`, so results written to
-   `reports/experiments/` persist on Drive after the session ends.
-4. Copy `reports/experiments/{key}.json`, `reports/experiments/predictions/` and the
-   executed notebook back into the local repository.
-
-Comparability rests on the task identity, not the machine. `protocol_id` hashes the
-protocol version, cohort checksum and split fingerprint only; the split fingerprint
-uses a fixed CRLF line terminator so it is identical on Windows, macOS and Linux.
-Each result also records its Python, platform, package versions (missing packages
-as `null`) and source-file hashes for audit. `comparison_table` and the summary
-audit accept any result with the current split fingerprint and source revision.
-
-The generator `scripts/build_model_notebooks.py` is provided for maintenance.
-Running it replaces notebook contents and clears outputs; it is not part of normal
-reproduction. Re-execute the notebooks after any regeneration. Editing shared
-experimental source invalidates the recorded protocol identity; rerun all seven
-models and the summary after such changes.
-
-## Models
-
-| Notebook | Estimator and representation | Validation search |
-|---|---|---|
-| `01_baseline_dummy_regressor.ipynb` | Mean-price DummyRegressor | Fixed strategy |
-| `02_baseline_median_price.ipynb` | Training district/type median price per square metre multiplied by area | Fixed hierarchical fallback |
-| `03_ridge_regression.ipynb` | Median imputation, scaling, sparse one-hot encoding, Ridge | Three alpha values |
-| `04_random_forest.ipynb` | Median imputation, sparse one-hot encoding, RandomForestRegressor | Two tree configurations |
-| `05_lightgbm.ipynb` | Native categorical and numeric missing-value handling | Two configurations, early stopping |
-| `06_catboost.ipynb` | Explicit native categorical features and native numeric missing-value handling | Two configurations, early stopping |
-| `07_tfidf_ridge.ipynb` | Redacted title/description, TF-IDF, Ridge | Four unigram/bigram configurations |
-
-Median-baseline keys qualify district names by province. Unseen district/type
-combinations fall back to province/type, type, then global training unit-price
-medians. Invalid inference areas use the positive training-area median. Other
-models exclude price-per-area and every other target-derived feature.
-
-## Protocol and scope
-
-The full source is inspected, then a fixed-seed uniform sample of 60,000 eligible
-rows is drawn across all shards. A target-free title/location/area proxy removes
-sampled repeated listings, retaining the earliest sampled observation. Distinct
-proxy groups are divided chronologically into approximately 70% training, 15%
-validation, and 15% test. ISO-8601 timestamps accept variable fractional seconds;
-offset-free timestamps are assigned UTC for ordering only. No verified entity ID
-or true source timezone is available.
-
-Eligibility requires finite positive prices and areas and valid publication times.
-Explicit rental-only titles are excluded by a fixed rule. Other invalid numerical
-features become missing. No target quantile trimming or price-unit correction is
-performed. All five observed property types are retained; this is property
-asking-price prediction rather than a detached-house-only or verified-sale study.
-
-Every learned transformation fits training data. Validation selects models using
-MAE in VND. Early stopping for boosting separately monitors validation log-RMSE.
-Models are not refitted on validation data. Nonbaseline estimators learn log1p
-prices, then predictions are inverse-transformed and bounded by training support.
-Baselines learn prices on their original scale. All metrics use original VND units.
-MAPE is secondary because very small positive recorded prices can dominate it.
-
-Text clauses containing monetary cues are discarded, followed by removal of every
-digit-bearing token. This reduces direct target copying and also removes physical
-quantities; semantic price cues may remain. No language model or external corpus is
-downloaded. Tokenization is whitespace based after accent normalization.
-
-The bounded cohort is a resource decision (approximately 3.4 GiB RAM was available
-at preparation), not a claim that 60,000 rows saturate performance. Limitations
-include noisy prices, imperfect entity matching, mixed transaction types, geographic
-dependence, no uncertainty intervals, and a single temporal holdout. These must
-accompany any academic interpretation. No model is declared superior without its
-observed evaluation, and descriptive rankings do not imply significance.
-
-## Artifacts
-
-- `data/raw/vduydong/`: verified, unchanged raw source files; ignored by Git.
-- `data/processed/experiment_cohort.parquet`: reproducible derived cohort; ignored.
-- `reports/experiments/data_manifest.json`: source checksums, full-source null
-  counts and distributions, cohort filtering, sample budget, temporal boundaries,
-  and split/cohort fingerprints.
-- `reports/experiments/{model}.json`: selected configuration, validation search,
-  original-scale scores, package versions, protocol identity, and prediction hashes.
-- `reports/experiments/predictions/`: local row-aligned validation/test predictions;
-  excluded from Git, reproducible by running the notebooks.
-- `reports/experiments/summary.md` and `comparison.csv`: consolidated real results.
-- `reports/experiments/comparison.pdf`: standalone comparison figure.
-- `reports/experiments/figures/`: local standalone diagnostic/importance PDFs;
-  diagnostic PNGs are also embedded in the executed notebooks.
-- `reports/experiments/validation_audit.json`: recomputed-metric, row-alignment,
-  checksum, finite-output, split, and notebook-output checks.
-
-The existing `main.ipynb`, EDA helpers, and unfinished `notebooks/` files are
-preserved. Earlier environment-setup changes are kept separate from this task's
-commit. Raw listing texts, model binaries, caches, and predictions are not committed.
+`scripts/build_model_notebooks.py` regenerates notebook source and clears outputs;
+it is a maintenance tool, not a prerequisite for training. Run all notebooks after
+changing shared training code. Incompatible older result rows are excluded from
+intermediate comparison tables; the final audit requires all seven models to match.

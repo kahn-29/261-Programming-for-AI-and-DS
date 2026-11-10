@@ -82,33 +82,31 @@ def main():
             "|---|---:|---:|---:|---:|"]
     for row in table.itertuples(index=False):
         rows.append(f"| {row.Model} | {row.MAE:,.0f} | {row.RMSE:,.0f} | {row.R2:.4f} | {row.MAPE:,.2f} |")
-    counts = manifest["counts"]
-    text = f'''# Property asking-price experiment summary
+    if manifest["input_path"].endswith("experiment_cohort.parquet"):
+        availability = (
+            "This run uses the existing processed cache, read unchanged. "
+            "The EDA export priced_listings.parquet was not the input for this run; "
+            "the results validate training on the supplied cache.")
+    else:
+        availability = "This run uses the explicitly identified preprocessed input above."
+    text = f'''# Model training results
 
-Source: [vduydong/vietnam-real-estates](https://huggingface.co/datasets/vduydong/vietnam-real-estates),
-revision `{manifest['source']['revision']}`. All five Parquet files were verified against their
-published LFS SHA-256 checksums. Original files are unchanged and excluded from Git.
+Input: `{manifest['input_path']}` (SHA-256 `{manifest['input_sha256']}`).
+All **{manifest['input_rows']:,} already preprocessed rows** were used.
+The training workflow does not download, inspect raw sources, clean, sample, deduplicate,
+or overwrite the supplied dataset. EDA and dataset preparation belong to `notebooks/`.
 
-## Data and experimental protocol
+## Training configuration
 
-- Inspected source rows: {counts['raw_rows']:,}.
-- Invalid/nonpositive prices: {counts['invalid_price']:,}; invalid/nonpositive areas: {counts['invalid_area']:,};
-  invalid timestamps: {counts['invalid_timestamp']:,}; explicit rental-only titles: {counts['explicit_rental_only_title']:,}.
-  Exclusion counts overlap and must not be added.
-- Eligible rows: {counts['eligible_rows']:,}. A seed-42 uniform sample of {manifest['sampled_rows_before_deduplication']:,}
-  eligible rows was drawn across all five shards before modelling, independent of price magnitude.
-- Removed sampled identity-proxy duplicates: {manifest['sample_duplicates_removed']:,}; final cohort: {manifest['cohort_rows']:,}.
-- Training/validation/test sizes: {manifest['split_counts']['train']:,} / {manifest['split_counts']['validation']:,} / {manifest['split_counts']['test']:,}.
-- Training end: {manifest['train_end']}; validation end: {manifest['validation_end']}.
-  Offset-free timestamps are assigned UTC for ordering; their true timezone is unknown.
+- Split: {manifest['split_method']}.
+- Training / validation / test: {manifest['split_counts']['train']:,} / {manifest['split_counts']['validation']:,} / {manifest['split_counts']['test']:,}.
 - Split fingerprint: `{manifest['split_sha256']}`.
-- Every preprocessing fit uses training observations. Validation MAE in VND selects candidates;
-  boosting early stopping monitors validation log-RMSE. Test labels do not select candidates.
-- Nonbaseline estimators fit log1p prices, inverse-transform predictions, and bound extrapolation
-  by the maximum training price. Baselines fit original-scale targets. Models are not refitted
-  on validation data. All reported metrics use complete original-scale partitions.
+- Imputation, encoding, scaling, group medians, and TF-IDF are fitted using training data.
+- Validation MAE selects hyperparameters. Boosting early stopping uses validation log-RMSE.
+- Nonbaseline models fit log1p prices and return original-scale predictions, bounded by
+  the maximum training price. Models are not refitted on validation data.
 
-## Observed test results
+## Test results
 
 {chr(10).join(rows)}
 
@@ -152,6 +150,24 @@ model-specific. These limitations should accompany any paper reporting the resul
 See [EXPERIMENTS.md](../../EXPERIMENTS.md) for commands, dependencies, and model definitions.
 Raw data, modelling caches, and prediction files remain local; compact metrics and the executed
 notebooks are versioned. Recreate the local predictions by executing the notebooks.
+MAE and RMSE are in VND. R-squared is unitless and MAPE is a percentage. Metrics use every
+held-out row. The largest recorded test price is **{largest_test_price:,.0f} VND**;
+its squared-error contribution ranges from **{100 * min(squared_error_shares):.2f}%** to
+**{100 * max(squared_error_shares):.2f}%** across the seven models. Recorded asking prices
+may contain errors; the training workflow does not change their values.
+
+![Test MAE comparison](comparison.png)
+
+## Validation and input availability
+
+All seven notebooks executed from beginning to end with real results, rendered tables,
+and diagnostic figures. Prediction row alignment, target values, file checksums, finite
+metrics, and identical split membership passed the final audit.
+
+{availability} When the EDA output exists, it becomes the default input; select an
+explicit `DATA_PATH` or `EXPERIMENT_DATA_PATH` to control the input across runs.
+
+See [EXPERIMENTS.md](../../EXPERIMENTS.md) for the training commands and data contract.
 '''
     (REPORTS / "summary.md").write_text(text, encoding="utf-8")
     write_json(REPORTS / "validation_audit.json", {

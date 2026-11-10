@@ -1,6 +1,6 @@
 {
-  "protocol_id": "076f8b153f272e01bd45f650e6c7d0b8d8667b2a88995e29bf5000b3db72ad5d",
-  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "protocol_id": "0eb966c9386334c0ee99e95e51e543f894549240b2e25359daf668fab37422f4",
+  "split_sha256": "0a9c1f107e0483f3d08c54f25982f7b35f7222089dab4824eb568b26a2c93a52",
   "model_audit": [
     {
       "model": "Dummy Regressor",
@@ -34,51 +34,51 @@
   "notebook_audit": [
     {
       "notebook": "01_baseline_dummy_regressor.ipynb",
-      "code_cells": 8,
+      "code_cells": 7,
       "embedded_figures": 1,
-      "rendered_tables": 10,
+      "rendered_tables": 6,
       "status": "passed"
     },
     {
       "notebook": "02_baseline_median_price.ipynb",
-      "code_cells": 8,
+      "code_cells": 7,
       "embedded_figures": 1,
-      "rendered_tables": 11,
+      "rendered_tables": 7,
       "status": "passed"
     },
     {
       "notebook": "03_ridge_regression.ipynb",
-      "code_cells": 8,
+      "code_cells": 7,
       "embedded_figures": 1,
-      "rendered_tables": 10,
+      "rendered_tables": 6,
       "status": "passed"
     },
     {
       "notebook": "04_random_forest.ipynb",
-      "code_cells": 9,
+      "code_cells": 8,
       "embedded_figures": 2,
-      "rendered_tables": 10,
+      "rendered_tables": 6,
       "status": "passed"
     },
     {
       "notebook": "05_lightgbm.ipynb",
-      "code_cells": 9,
+      "code_cells": 8,
       "embedded_figures": 2,
-      "rendered_tables": 10,
+      "rendered_tables": 6,
       "status": "passed"
     },
     {
       "notebook": "06_catboost.ipynb",
-      "code_cells": 9,
+      "code_cells": 8,
       "embedded_figures": 2,
-      "rendered_tables": 10,
+      "rendered_tables": 6,
       "status": "passed"
     },
     {
       "notebook": "07_tfidf_ridge.ipynb",
-      "code_cells": 8,
+      "code_cells": 7,
       "embedded_figures": 1,
-      "rendered_tables": 11,
+      "rendered_tables": 7,
       "status": "passed"
     }
   ],

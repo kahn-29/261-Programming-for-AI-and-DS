@@ -2,6 +2,8 @@
 
 import numpy as np
 import pandas as pd
+import re
+import unicodedata
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -32,6 +34,8 @@ def structured_preprocessor(scale=False):
 def native_features(frame, categories=None):
     """Map unseen levels to missing using exclusively training category levels."""
     features = frame[NUMERIC + CATEGORICAL].copy()
+    for column in CATEGORICAL:
+        features[column] = features[column].fillna("__MISSING__").astype(str)
     if categories is None:
         categories = {column: sorted(features[column].unique().tolist()) for column in CATEGORICAL}
     for column in CATEGORICAL:
@@ -54,6 +58,27 @@ def text_pipeline(alpha, ngram_range, max_features, min_df, max_df):
                                   strip_accents="unicode", dtype=np.float64)),
         ("regressor", Ridge(alpha=alpha, solver="lsqr", tol=1e-5)),
     ])
+
+
+def redact_text(value):
+    """Remove explicit price cues from model text without learning a vocabulary."""
+    text = unicodedata.normalize("NFKD", str(value).lower().replace("đ", "d"))
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    money = r"\b(?:gia|ty|ti|trieu|tr|vnd|dong|usd|price|billion|million)\b|[$₫€]"
+    clauses = re.split(r"[\n.!?;,]+", text)
+    text = " ".join(clause for clause in clauses if not re.search(money, clause))
+    text = re.sub(r"\[phone_number\]|\b\w*\d\w*\b", " ", text)
+    return " ".join(text.split())
+
+
+def text_inputs(frame):
+    """Use prepared text or build TF-IDF input from the EDA text fields."""
+    if "text" in frame:
+        return frame.text.fillna("").astype(str)
+    columns = [name for name in ["name", "description"] if name in frame]
+    if not columns:
+        raise ValueError("TF-IDF requires prepared text or name/description columns")
+    return frame[columns].fillna("").astype(str).agg(" . ".join, axis=1).map(redact_text)
 
 
 class MedianPricePerSqm(RegressorMixin, BaseEstimator):

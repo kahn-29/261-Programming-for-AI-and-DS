@@ -23,3 +23,40 @@ dist/
 
 .cache/
 
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+*.vrb
+*.xdv
+*.dvi
+*.ps
+*.run.xml
+*-blx.bib
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.idx
+*.ilg
+*.ind
+*.lol
+_minted*/
+
+# Built PDFs (keep source .tex / .bib / graphics)
+reports/latex/**/*.pdf
+!reports/latex/main.pdf
