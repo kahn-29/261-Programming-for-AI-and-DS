@@ -1,0 +1,55 @@
+\section{Chosen Data \& Justification}
+\label{sec:chosen-data}
+
+\subsection{Dataset Description}
+
+This project addresses house price prediction for the Vietnamese market. The selected data source is the public dataset \textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2025_2026}. According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings published between June 2025 and March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
+
+\subsection{Feature Meanings}
+
+Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.
+\begin{table}[htbp]
+\centering
+\caption{Feature meanings from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.}
+\label{tab:feature-meanings}
+\small
+\begin{tabular}{llp{7.2cm}}
+\toprule
+Column & Type & Description (published) \\
+\midrule
+\texttt{name} & string & Listing title (HTML stripped, phone numbers redacted) \\
+\texttt{description} & string & Full listing description (HTML stripped, phone numbers redacted) \\
+\texttt{property\_type\_name} & string & Property category (e.g., Căn hộ chung cư, Nhà, Đất, \ldots) \\
+\texttt{province\_name} & string & Province / City name (63 provinces) \\
+\texttt{district\_name} & string & District (Quận / Huyện) \\
+\texttt{ward\_name} & string & Ward (Phường / Xã) \\
+\texttt{street\_name} & string & Street name \\
+\texttt{project\_name} & string & Real estate development project name (if applicable) \\
+\texttt{price} & float64 & Listed price in VND (Vietnamese Dong). \texttt{null} if not disclosed. \\
+\texttt{area} & float64 & Total floor/land area in m\textsuperscript{2} \\
+\texttt{floor\_count} & float64 & Number of floors in the building \\
+\texttt{frontage\_width} & float64 & Frontage width in meters \\
+\texttt{house\_depth} & float64 & Depth of the property in meters \\
+\texttt{road\_width} & float64 & Width of the road in front of the property (meters) \\
+\texttt{bedroom\_count} & float64 & Number of bedrooms \\
+\texttt{bathroom\_count} & float64 & Number of bathrooms \\
+\texttt{house\_direction} & string & Cardinal facing direction (Đông, Tây, Nam, Bắc, Đông-Bắc, \ldots) \\
+\texttt{balcony\_direction} & string & Cardinal facing direction of the balcony \\
+\texttt{published\_at} & string & ISO 8601 datetime the listing was published \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Justification}
+
+The dataset is suitable for the prediction task for four reasons.
+\paragraph{Scale.}
+The dataset contains over 3.5 million records, which is large enough to support stable exploratory analysis and supervised learning across regions and property types.
+\paragraph{Schema.}
+The schema separates a clear numeric target (\texttt{price}) from predictors describing location (\texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name}, \texttt{street\_name}, \texttt{project\_name}), property category (\texttt{property\_type\_name}), size and layout (\texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}), orientation (\texttt{house\_direction}, \texttt{balcony\_direction}), textual content (\texttt{name}, \texttt{description}), and listing time (\texttt{published\_at}).
+\paragraph{National coverage.}
+The dataset covers all 63 provinces and cities of Vietnam, which makes it feasible to study regional price patterns and to train models that generalise beyond a single city.
+\paragraph{Publisher intended use cases.}
+The publisher lists real-estate price prediction among the intended use cases.
+
+The published definitions also indicate limitations that call for an EDA stage before modelling: \texttt{price} may be undisclosed (\texttt{null}), some structural fields are often incomplete for particular property types, and the collection includes both sale and rental listings, with no variable that distinguishes them. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
