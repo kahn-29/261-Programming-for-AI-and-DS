@@ -42,7 +42,7 @@ Variable & Missing ($n$) & Missing (\%) \\
 
 The missing rate by property type (Figure~\ref{fig:missing-type}) indicates that part of the missingness is related to the nature of the property. For apartments (\textit{Căn hộ chung cư}), \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, and \texttt{road\_width} are missing in 100\% of the listings; for land (\textit{Đất}), \texttt{floor\_count}, \texttt{bedroom\_count}, \texttt{bathroom\_count}, and \texttt{balcony\_direction} are missing in 100\%. The variable \texttt{project\_name} is missing in 98\% of houses (\textit{Nhà}) and 93\% of land listings, compared with 13\% of apartments, whereas \texttt{price} is missing in 4\% to 10\% of the listings of each type. Rows with missing values were retained.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/null_rate_by_property_type.png}
 \caption{Null rate of each variable by property type.}
@@ -61,7 +61,7 @@ Listings were flagged as duplicates when they share the normalised \texttt{name}
 \paragraph{Extreme prices.}
 In the priced, de-duplicated data, the distribution of \texttt{price} on logarithmic axes (Figure~\ref{fig:price-loglog}) is concentrated between about $10^{9}$ and $10^{10}$ VND, with isolated listings below $10^{4}$ VND and above $10^{15}$ VND. The ten lowest prices are between 1,000 and 3,000 VND, and in several of them the title states a different price (for example, a listing recorded at 2,000 VND is titled as 1.6 billion VND). The ten highest range from about $4.49\times10^{14}$ to $2.66\times10^{16}$ VND, and some have very large areas (for example, 999,999~m\textsuperscript{2}). These observations suggest data entry errors, for example in the unit of the price. A range of $[10^{8}, 10^{12}]$ VND (100 million to 1,000 billion VND) was therefore applied; it removes 2,574 listings (0.107\%).
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/price_distribution_loglog.png}
 \caption{Distribution of asking price after removing invalid prices and duplicates (logarithmic scale on both axes).}
@@ -73,7 +73,7 @@ In the priced, de-duplicated data, the distribution of \texttt{price} on logarit
 
 The analytical dataset (\texttt{df\_priced}) was built in three steps: retaining listings with $\text{price} > 0$ and $\text{area} > 0$, removing the flagged duplicates, and retaining prices within $[10^{8}, 10^{12}]$ VND. Table~\ref{tab:flow} gives the number of listings after each step. The final dataset contains 2,412,798 listings.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Number of listings after each filtering step.}
 \label{tab:flow}
@@ -124,7 +124,7 @@ Variable & Count & Mean & Std. dev. & Min & 25\% & 50\% & 75\% & Max \\
 \paragraph{Distribution of price and area.}
 On a base-10 logarithmic scale (Figure~\ref{fig:log-hist}), the distribution of price is unimodal and approximately symmetric, with a mode at about 9.9 (roughly 8 billion VND) and values mainly between 8.5 and 11.5. The distribution of area is unimodal with a mode at about 1.9 to 2.0 (roughly 80 to 100~m\textsuperscript{2}) and a long right tail. Given the right skew shown in Table~\ref{tab:describe}, this supports the use of a log transformation for price.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/log10_price_area_hist.png}
 \caption{Histograms of $\log_{10}(\text{price})$ (left) and $\log_{10}(\text{area})$ (right).}
@@ -137,7 +137,7 @@ Groups with fewer than 100 listings were considered difficult to use as features
 \paragraph{Area and price.}
 A scatter plot on logarithmic axes, using a random sample of 20,000 listings (seed 42), is shown in Figure~\ref{fig:scatter}. Most points lie at areas of roughly 30 to 300~m\textsuperscript{2} and prices of roughly $10^{9}$ to $10^{10}$ VND. The cloud shows an upward tendency, so larger areas are generally associated with higher prices, but the dispersion at a given area is wide, and points become sparse above $10^{3}$~m\textsuperscript{2}. This plot is a visual indication only; the strength of the association was not quantified.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/area_vs_price_scatter.png}
 \caption{Area versus asking price on logarithmic axes (random sample of 20,000 listings).}
@@ -147,7 +147,7 @@ A scatter plot on logarithmic axes, using a random sample of 20,000 listings (se
 \paragraph{Price per square metre by property type.}
 The price per square metre (\texttt{price\_per\_m2}) is \texttt{price} divided by \texttt{area}. Its $\log_{10}$ distribution for each property type is shown in Figure~\ref{fig:ppm2}, with the horizontal axis restricted to 6--10. Houses and villas/townhouses are centred at higher values (modes at about 8.3 and 8.2, roughly 200 and 160 million VND per m\textsuperscript{2}) than apartments and land (modes at about 7.8). Land has the widest, left-skewed distribution, and apartments the narrowest. Shophouses show two local maxima, at about 7.8--7.9 and 8.2, which may indicate a mix of different kinds of listing (for example, sale and rental); this was not tested and remains a hypothesis.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{figures/price_per_m2_by_type.png}
 \caption{Distribution of $\log_{10}(\text{price per m}^2)$ by property type (houses $n = 1{,}080{,}119$; land $n = 565{,}074$; apartments $n = 547{,}956$; villas/townhouses $n = 180{,}047$; shophouses $n = 39{,}602$).}

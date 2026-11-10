@@ -7,8 +7,7 @@ This project addresses house price prediction for the Vietnamese market. The sel
 
 \subsection{Feature Meanings}
 
-Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}. The descriptions are taken from that page and are not reinterpreted here.
-
+Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.
 \begin{table}[htbp]
 \centering
 \caption{Feature meanings from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.}
@@ -43,6 +42,14 @@ Column & Type & Description (published) \\
 
 \subsection{Justification}
 
-The dataset is suitable for the prediction task for four reasons. First, its scale (over 3.5 million records) supports stable exploratory analysis and supervised learning across regions and property types. Second, the schema separates a clear numeric target (\texttt{price}) from predictors describing location (\texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name}, \texttt{street\_name}, \texttt{project\_name}), property category (\texttt{property\_type\_name}), size and layout (\texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}), orientation (\texttt{house\_direction}, \texttt{balcony\_direction}), textual content (\texttt{name}, \texttt{description}), and listing time (\texttt{published\_at}). Third, national coverage makes it feasible to study regional price patterns and to train models that generalise beyond a single city, and the publication timestamp allows chronological train/validation/test splits, which are preferable to purely random splits for a market that changes over time. Fourth, the publisher lists real-estate price prediction among the intended use cases.
+The dataset is suitable for the prediction task for four reasons.
+\paragraph{Scale.}
+The dataset contains over 3.5 million records, which is large enough to support stable exploratory analysis and supervised learning across regions and property types.
+\paragraph{Schema.}
+The schema separates a clear numeric target (\texttt{price}) from predictors describing location (\texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name}, \texttt{street\_name}, \texttt{project\_name}), property category (\texttt{property\_type\_name}), size and layout (\texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}), orientation (\texttt{house\_direction}, \texttt{balcony\_direction}), textual content (\texttt{name}, \texttt{description}), and listing time (\texttt{published\_at}).
+\paragraph{National coverage.}
+The dataset covers all 63 provinces and cities of Vietnam, which makes it feasible to study regional price patterns and to train models that generalise beyond a single city.
+\paragraph{Publisher intended use cases.}
+The publisher lists real-estate price prediction among the intended use cases.
 
 The published definitions also indicate limitations that call for an EDA stage before modelling: \texttt{price} may be undisclosed (\texttt{null}), some structural fields are often incomplete for particular property types, and the collection includes both sale and rental listings, with no variable that distinguishes them. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
