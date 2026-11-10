@@ -54,3 +54,4 @@ _minted*/
 
 # Built PDFs (keep source .tex / .bib / graphics)
 reports/latex/**/*.pdf
+!reports/latex/main.pdf
