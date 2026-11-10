@@ -1,5 +1,52 @@
-\section{Choosen Data \& Justification}
+\section{Chosen Data \& Justification}
+\label{sec:chosen-data}
 
+\subsection{Dataset Choice}
 
+This project addresses house price prediction for the Vietnamese market. The selected data source is the public Hugging Face dataset \texttt{tinixai/vietnam-real-estates} (\textit{Tinix Vietnam Real Estate Listings 2025--2026}), curated and published by TiniX AI~\cite{tinix_vietnam_real_estate_2025_2026}. According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings spanning June 2025 to March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
 
+The dataset was preferred over smaller or older alternatives for three practical reasons. First, its scale (over 3.5 million records) supports stable exploratory analysis and supervised learning across regions and property types. Second, the schema already includes the target variable (\texttt{price}) together with location, physical attributes, and free-text fields that are commonly used in real-estate valuation. Third, the publisher explicitly lists real-estate price prediction among the intended use cases, which aligns with the course assignment.
 
+\subsection{Feature Meanings}
+
+Table~\ref{tab:feature-meanings} reproduces the data schema from the published Hugging Face dataset card. The descriptions below are taken from that page and are not reinterpreted here.
+
+\begin{table}[htbp]
+\centering
+\caption{Feature meanings from the published dataset card of \texttt{tinixai/vietnam-real-estates}.}
+\label{tab:feature-meanings}
+\small
+\begin{tabular}{llp{7.2cm}}
+\toprule
+Column & Type & Description (published) \\
+\midrule
+\texttt{name} & string & Listing title (HTML stripped, phone numbers redacted) \\
+\texttt{description} & string & Full listing description (HTML stripped, phone numbers redacted) \\
+\texttt{property\_type\_name} & string & Property category (e.g., Căn hộ chung cư, Nhà, Đất, \ldots) \\
+\texttt{province\_name} & string & Province / City name (63 provinces) \\
+\texttt{district\_name} & string & District (Quận / Huyện) \\
+\texttt{ward\_name} & string & Ward (Phường / Xã) \\
+\texttt{street\_name} & string & Street name \\
+\texttt{project\_name} & string & Real estate development project name (if applicable) \\
+\texttt{price} & float64 & Listed price in VND (Vietnamese Dong). \texttt{null} if not disclosed. \\
+\texttt{area} & float64 & Total floor/land area in m\textsuperscript{2} \\
+\texttt{floor\_count} & float64 & Number of floors in the building \\
+\texttt{frontage\_width} & float64 & Frontage width in meters \\
+\texttt{house\_depth} & float64 & Depth of the property in meters \\
+\texttt{road\_width} & float64 & Width of the road in front of the property (meters) \\
+\texttt{bedroom\_count} & float64 & Number of bedrooms \\
+\texttt{bathroom\_count} & float64 & Number of bathrooms \\
+\texttt{house\_direction} & string & Cardinal facing direction (Đông, Tây, Nam, Bắc, Đông-Bắc, \ldots) \\
+\texttt{balcony\_direction} & string & Cardinal facing direction of the balcony \\
+\texttt{published\_at} & string & ISO 8601 datetime the listing was published \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The published card also documents the main property categories present in the collection: \textit{Nhà} (residential house), \textit{Căn hộ chung cư} (apartment / condominium), \textit{Đất} (land plots), \textit{Biệt thự / Nhà liền kề} (villas and townhouses), \textit{Nhà mặt phố} (street-front houses), and \textit{Shophouse} (commercial shophouses).
+
+\subsection{Justification}
+
+The schema is suitable for the prediction task because it separates a clear numeric target (\texttt{price}) from predictors that capture location (\texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name}, \texttt{street\_name}, \texttt{project\_name}), property category (\texttt{property\_type\_name}), physical size and layout (\texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}), orientation (\texttt{house\_direction}, \texttt{balcony\_direction}), textual content (\texttt{name}, \texttt{description}), and listing time (\texttt{published\_at}). National coverage over 63 provinces, together with the volume of priced listings, makes it feasible to study regional price patterns and to train models that generalise beyond a single city. The publication timestamp further allows chronological train/validation/test splits, which is preferable to a purely random split for a market that changes over time.
+
+At the same time, the published definitions already indicate limitations that justify a careful EDA stage before modelling: \texttt{price} may be undisclosed (\texttt{null}), some structural fields are often incomplete for particular property types, and the collection includes both sale and rental listings. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
