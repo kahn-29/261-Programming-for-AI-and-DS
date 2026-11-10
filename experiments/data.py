@@ -24,6 +24,16 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def split_fingerprint(frame):
+    """SHA-256 of split membership, identical on every operating system.
+
+    The line terminator is fixed to CRLF because the frozen manifest was first
+    computed on Windows, where ``to_csv`` defaults to ``os.linesep``.
+    """
+    table = frame[["row_id", "group_id", "split"]].to_csv(index=False, lineterminator="\r\n")
+    return hashlib.sha256(table.encode()).hexdigest()
+
+
 def write_json(path, value):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False,
@@ -67,6 +77,57 @@ def load_data(path=None):
     if frame.area.isna().any() or not frame.area.gt(0).all():
         raise ValueError("Preprocessed areas must be finite and positive; no rows are filtered here")
     for column in CATEGORICAL:
+        frame[column] = frame[column].fillna("__MISSING__").astype(str)
+    # Price is deliberately excluded from the identity proxy.
+    title = frame.name.fillna("").map(normalize).str.replace(r"\d+(?:[.,]\d+)*", "#", regex=True)
+    location = frame[["province_name", "district_name", "ward_name"]].agg("|".join, axis=1)
+    key = title + "|" + location + "|" + frame.area.round(2).astype(str)
+    frame["group_id"] = key.map(lambda value: hashlib.sha256(value.encode()).hexdigest())
+    frame = frame.sort_values(["published_at", "row_id"]).drop_duplicates("group_id", keep="first")
+    if len(frame) < 1000:
+        raise ValueError("Insufficient eligible distinct listings for the frozen protocol")
+    train_end = frame.published_at.iloc[int(.70 * len(frame)) - 1]
+    validation_end = frame.published_at.iloc[int(.85 * len(frame)) - 1]
+    frame["split"] = np.select(
+        [frame.published_at.le(train_end), frame.published_at.le(validation_end)],
+        ["train", "validation"], default="test")
+    frame["text"] = frame[TEXT].fillna("").agg(" . ".join, axis=1).map(redact_text)
+    # Raw titles and descriptions are not retained in the modelling cache.
+    frame = frame.drop(columns=TEXT).reset_index(drop=True)
+    split_digest = split_fingerprint(frame)
+    PROCESSED.mkdir(parents=True, exist_ok=True)
+    path = PROCESSED / "experiment_cohort.parquet"
+    frame.to_parquet(path, index=False)
+    profile = {
+        "protocol_version": PROTOCOL_VERSION, "seed": SEED, "sample_budget": SAMPLE_SIZE,
+        "source": source, "counts": counts, "raw_schema_by_shard": schemas,
+        "raw_null_counts": {key: int(value) for key, value in missing.items()},
+        "eligible_month_counts": dict(sorted(months.items())), "eligible_property_type_counts": types,
+        "eligible_date_min": str(earliest), "eligible_date_max": str(latest),
+        "sampled_rows_before_deduplication": sampled_rows,
+        "sample_duplicates_removed": sampled_rows - len(frame), "cohort_rows": len(frame),
+        "train_end": str(train_end), "validation_end": str(validation_end),
+        "split_counts": {key: int(value) for key, value in frame.split.value_counts().items()},
+        "split_sha256": split_digest, "cohort_sha256": digest(path),
+        "cohort_price_quantiles_vnd": {str(q): float(frame.price.quantile(q)) for q in [0, .01, .5, .99, 1]},
+        "cohort_missing_fraction": {key: float(frame[key].isna().mean()) for key in NUMERIC},
+    }
+    write_json(REPORTS / "data_manifest.json", profile)
+    return frame, profile
+
+
+def load_data():
+    """Load a verified cohort; preparation is explicit and never silently downloads."""
+    path = PROCESSED / "experiment_cohort.parquet"
+    manifest_path = REPORTS / "data_manifest.json"
+    if not path.exists() or not manifest_path.exists():
+        raise FileNotFoundError("Run python -m experiments.prepare before executing the notebooks.")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest["protocol_version"] != PROTOCOL_VERSION or digest(path) != manifest["cohort_sha256"]:
+        raise ValueError("Cohort integrity/protocol mismatch; rerun python -m experiments.prepare.")
+    frame = pd.read_parquet(path)
+    if split_fingerprint(frame) != manifest["split_sha256"]:
+        raise ValueError("Split membership has changed")
         values = frame[column].astype(object)
         frame[column] = values.where(values.notna(), np.nan)
     if "row_id" not in frame:

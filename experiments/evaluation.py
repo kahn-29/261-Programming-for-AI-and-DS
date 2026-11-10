@@ -18,21 +18,53 @@ MODEL_NAMES = {
     "dummy": "Dummy Regressor", "median": "Median Price per sqm",
     "ridge": "Ridge Regression", "forest": "Random Forest", "lightgbm": "LightGBM",
     "catboost": "CatBoost", "tfidf": "TF-IDF + Ridge",
+    "mlp": "MLP + Embedding", "phobert": "PhoBERT + MLP",
+    "fusion": "Tabular + PhoBERT",
 }
-PACKAGES = ["numpy", "pandas", "pyarrow", "scikit-learn", "lightgbm", "catboost", "matplotlib"]
+# The seven classical models that the summary audit requires.
+CORE_MODELS = ["dummy", "median", "ridge", "forest", "lightgbm", "catboost", "tfidf"]
+PACKAGES = ["numpy", "pandas", "pyarrow", "scikit-learn", "lightgbm", "catboost",
+            "matplotlib", "torch", "transformers"]
+
+
+def _version(name):
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return None
 
 
 def environment():
     return {"python": platform.python_version(), "platform": platform.platform(),
-            "packages": {name: importlib.metadata.version(name) for name in PACKAGES}}
+            "packages": {name: _version(name) for name in PACKAGES}}
+
+
+def source_hashes():
+    return {name: hashlib.sha256((ROOT / "experiments" / name).read_bytes()).hexdigest()
+            for name in ["data.py", "estimators.py", "evaluation.py", "text_vi.py", "deep.py", "phobert.py", "fusion.py"]}
 
 
 def protocol_id(manifest):
+    """Identity of the prediction task: same cohort, same split, same protocol version.
+
+    Hardware, operating system, package versions and source hashes are recorded in
+    every result for audit, but they do not define the task, so results produced on
+    Windows, macOS and Colab stay comparable.
+    """
+    value = {"protocol_version": manifest["protocol_version"],
+             "cohort": manifest["cohort_sha256"], "split": manifest["split_sha256"]}
     sources = {name: hashlib.sha256((ROOT / "experiments" / name).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
                for name in ["data.py", "estimators.py", "evaluation.py"]}
     value = {"input": manifest["input_sha256"], "split": manifest["split_sha256"],
              "source_code": sources, "environment": environment()}
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def is_comparable(record, manifest):
+    """Same task as the current manifest. Older records lack protocol_version, so
+    they are matched on split membership and source revision instead."""
+    return (record.get("split_sha256") == manifest["split_sha256"]
+            and record.get("revision") == manifest["source"]["revision"])
 
 
 def metrics(actual, predicted):
@@ -84,6 +116,9 @@ def record_result(key, manifest, parts, validation_prediction, test_prediction,
                       "predicted_vnd": prediction}).to_parquet(path, index=False)
         prediction_files[split] = {"path": path.relative_to(ROOT).as_posix(), "sha256": digest(path)}
     result = {"model": MODEL_NAMES[key], "key": key, "protocol_id": protocol_id(manifest),
+              "split_sha256": manifest["split_sha256"], "dataset": manifest["source"]["dataset"],
+              "revision": manifest["source"]["revision"], "environment": environment(),
+              "source_code": source_hashes(),
               "split_sha256": manifest["split_sha256"], "input_path": manifest["input_path"],
               "input_sha256": manifest["input_sha256"], "environment": environment(),
               "selected_parameters": parameters, "tuning": tuning.to_dict(orient="records"),
@@ -101,7 +136,7 @@ def comparison_table(manifest):
         if not path.exists():
             continue
         record = json.loads(path.read_text(encoding="utf-8"))
-        if record["protocol_id"] != protocol_id(manifest):
+        if not is_comparable(record, manifest):
             continue
         records.append({"Model": name, **record["metrics"]["test"]})
     return pd.DataFrame(records, columns=["Model", "MAE", "RMSE", "R2", "MAPE"])

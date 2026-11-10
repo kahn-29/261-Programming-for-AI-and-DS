@@ -1,0 +1,131 @@
+{
+  "model": "PhoBERT + MLP",
+  "key": "phobert",
+  "protocol_id": "bd02fa2fcf19213f16219e22e048f9640b3b724b1598073025a67c9b90426c94",
+  "split_sha256": "15340296092993fac87fe7f2cd02c9635da706a0510a79167d2be7fd83474af9",
+  "dataset": "vduydong/vietnam-real-estates",
+  "revision": "a9a66ffa985edcf76b4be59ae2c6f5b1db889c38",
+  "environment": {
+    "python": "3.13.16",
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "packages": {
+      "numpy": "2.4.6",
+      "pandas": "2.2.3",
+      "pyarrow": "23.0.1",
+      "scikit-learn": "1.6.1",
+      "lightgbm": "4.6.0",
+      "catboost": null,
+      "matplotlib": "3.10.0",
+      "torch": "2.14.1+cu130",
+      "transformers": "5.22.1"
+    }
+  },
+  "source_code": {
+    "data.py": "597e1e7a73fce6fabe5a98d00b1e74240f8a2dcfed3bdd99cab9b80f0bcfd90d",
+    "estimators.py": "832984fb02467315efcb02b68b7b68434a34799f76bfbfa2605af6bfe3de2566",
+    "evaluation.py": "0439e33cc1e05709eb80f613f6c1eef221bc8c1557a2a5d5df22bb8981f08c29",
+    "text_vi.py": "d6b35d8ac4b101b27320aafe7bbe24dd52ba9a7a4c297dec8a56f654bc54d3a1",
+    "deep.py": "2ac0bdba2ddbd9d208578aff6e34a6282b27a5019b5f1c6e66703bb57b49009f",
+    "phobert.py": "bb1328c2bcd5c66d7788e518c578e2ad187fee18a3ec35390eb23e41a4ac86a8"
+  },
+  "selected_parameters": {
+    "epochs": 4,
+    "batch_size": 32,
+    "accumulation": 1,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.06,
+    "huber_delta": 1.0,
+    "base_lr": 5e-05,
+    "head_lr": 0.001,
+    "layer_decay": 0.85,
+    "freeze_steps": 300
+  },
+  "tuning": [
+    {
+      "epochs": 4,
+      "batch_size": 32,
+      "accumulation": 1,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.06,
+      "huber_delta": 1.0,
+      "base_lr": 3e-05,
+      "head_lr": 0.001,
+      "layer_decay": 0.9,
+      "freeze_steps": 300,
+      "MAE": 6165153995.527677,
+      "RMSE": 35592504460.42959,
+      "R2": 0.16211546477513905,
+      "MAPE": 15302.308725120907,
+      "fit_seconds": 1894.558255862,
+      "best_step": 5200
+    },
+    {
+      "epochs": 4,
+      "batch_size": 32,
+      "accumulation": 1,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.06,
+      "huber_delta": 1.0,
+      "base_lr": 3e-05,
+      "head_lr": 3e-05,
+      "layer_decay": 1.0,
+      "freeze_steps": 0,
+      "MAE": 6190635358.5317545,
+      "RMSE": 35060905252.5569,
+      "R2": 0.18695734875996484,
+      "MAPE": 14598.73890084829,
+      "fit_seconds": 1960.953111067,
+      "best_step": 5200
+    },
+    {
+      "epochs": 4,
+      "batch_size": 32,
+      "accumulation": 1,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.06,
+      "huber_delta": 1.0,
+      "base_lr": 5e-05,
+      "head_lr": 0.001,
+      "layer_decay": 0.85,
+      "freeze_steps": 300,
+      "MAE": 6134690970.750664,
+      "RMSE": 35493078029.020546,
+      "R2": 0.16679012938243343,
+      "MAPE": 14380.176250127199,
+      "fit_seconds": 1893.7644989320006,
+      "best_step": 5200
+    }
+  ],
+  "metrics": {
+    "validation": {
+      "MAE": 6134690970.750664,
+      "RMSE": 35493078029.020546,
+      "R2": 0.16679012938243343,
+      "MAPE": 14380.176250127199
+    },
+    "test": {
+      "MAE": 38406194902.18433,
+      "RMSE": 2966142440478.653,
+      "R2": 0.00013083532586533053,
+      "MAPE": 44.848046011844
+    }
+  },
+  "prediction_files": {
+    "validation": {
+      "path": "reports/experiments/predictions/phobert_validation.parquet",
+      "sha256": "14d63698c3cd3bd7f863ea1c5e648c6b5fe55b4cf88dc575972ebd8ede0c4256"
+    },
+    "test": {
+      "path": "reports/experiments/predictions/phobert_test.parquet",
+      "sha256": "15b00b316aec90d078dce820e7c8cb127213f676bb912bf865a086cded237ecd"
+    }
+  },
+  "extra": {
+    "pretrained_model": "vinai/phobert-base-v2",
+    "max_length": 256,
+    "best_step": 5200,
+    "device": "cuda",
+    "gpu": "Tesla T4",
+    "share_truncated_train": 0.013081151141300434
+  }
+}
