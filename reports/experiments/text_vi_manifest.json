@@ -1,0 +1,9 @@
+{
+  "cohort_sha256": "fed76e7d6af7d8adebd00e0a8e2d7029d575f56048131806314b5186088464a1",
+  "text_vi_sha256": "7f487180bcec30e3760a00723183f262b1f7de319f0fb3c281678b8392d1b8bb",
+  "rows": 59519,
+  "invariant_mismatch_row_ids": [
+    "shard_0001:179832"
+  ],
+  "segmenter": "VnCoreNLP RDRSegmenter"
+}

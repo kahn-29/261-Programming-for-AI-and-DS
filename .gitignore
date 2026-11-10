@@ -18,6 +18,11 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Colab bundle
+dist/
+
+.cache/
+
 # LaTeX build artifacts
 *.aux
 *.bbl
