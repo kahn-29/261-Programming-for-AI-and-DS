@@ -1,0 +1,18 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Group Information \& Member Roles}{2}{section.1}%
+\contentsline {section}{\numberline {2}Choosen Data \& Justification}{3}{section.2}%
+\contentsline {section}{\numberline {3}Work Progress Overview}{4}{section.3}%
+\contentsline {section}{\numberline {4}Exploratory Data Analysis (EDA)}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Data Source and Schema Validation}{5}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Missing Values}{5}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Validity Checks}{6}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Temporal, Geographic and Direction Variables}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Duplicate Listings}{7}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Price Range and Extreme Values}{8}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Construction of the Analytical Dataset}{8}{subsection.4.7}%
+\contentsline {subsection}{\numberline {4.8}Profile of the Analytical Dataset}{9}{subsection.4.8}%
+\contentsline {subsection}{\numberline {4.9}Distribution of Price and Area}{9}{subsection.4.9}%
+\contentsline {subsection}{\numberline {4.10}Group Coverage}{9}{subsection.4.10}%
+\contentsline {subsection}{\numberline {4.11}Relationship between Area and Price}{10}{subsection.4.11}%
+\contentsline {subsection}{\numberline {4.12}Price per Square Metre by Property Type}{10}{subsection.4.12}%
+\contentsline {subsection}{\numberline {4.13}Summary of Findings}{11}{subsection.4.13}%
