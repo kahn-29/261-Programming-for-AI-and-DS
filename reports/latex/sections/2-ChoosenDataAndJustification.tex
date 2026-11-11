@@ -1,13 +1,20 @@
 \section{Chosen Data \& Justification}
 \label{sec:chosen-data}
 
-\subsection{Dataset Description}
+The chosen dataset provides a large number of real-estate listings with a clear numeric target and a wide range of predictors, which suits the house price prediction task for the Vietnamese market.
 
-This project addresses house price prediction for the Vietnamese market. The selected data source is the public dataset \textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2025_2026}. According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings published between June 2025 and March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
+\paragraph{Dataset}
+\textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2025_2026}
 
-\subsection{Feature Meanings}
+\paragraph{Overview}
+According to the published dataset card, the collection contains exactly 3{,}500{,}744 sale and rental listings published between June 2025 and March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
 
-Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.
+\paragraph{Justification}
+The dataset contains over 3.5 million records, which supports stable exploratory analysis and supervised learning across regions and property types. Its schema separates a numeric target (\texttt{price}) from predictors describing location, property category, size and layout, orientation, textual content, and listing time. National coverage makes it possible to study regional price patterns and to train models that generalise beyond a single city, and the publication timestamp allows chronological train/validation/test splits, which are preferable to random splits for a market that changes over time. The publisher also lists real-estate price prediction among the intended use cases.
+\paragraph{Limitations} The published definitions indicate that \texttt{price} may be undisclosed (\texttt{null}), that some structural fields are often incomplete for particular property types, and that the collection includes both sale and rental listings, with no variable that distinguishes them. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
+
+Table~\ref{tab:feature-meanings} reproduces the data schema from the published dataset card. The descriptions are taken from that page and are not reinterpreted here.
+
 \begin{table}[htbp]
 \centering
 \caption{Feature meanings from the published dataset card~\cite{tinix_vietnam_real_estate_2025_2026}.}
@@ -39,17 +46,3 @@ Column & Type & Description (published) \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\subsection{Justification}
-
-The dataset is suitable for the prediction task for four reasons.
-\paragraph{Scale.}
-The dataset contains over 3.5 million records, which is large enough to support stable exploratory analysis and supervised learning across regions and property types.
-\paragraph{Schema.}
-The schema separates a clear numeric target (\texttt{price}) from predictors describing location (\texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name}, \texttt{street\_name}, \texttt{project\_name}), property category (\texttt{property\_type\_name}), size and layout (\texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}), orientation (\texttt{house\_direction}, \texttt{balcony\_direction}), textual content (\texttt{name}, \texttt{description}), and listing time (\texttt{published\_at}).
-\paragraph{National coverage.}
-The dataset covers all 63 provinces and cities of Vietnam, which makes it feasible to study regional price patterns and to train models that generalise beyond a single city.
-\paragraph{Publisher intended use cases.}
-The publisher lists real-estate price prediction among the intended use cases.
-
-The published definitions also indicate limitations that call for an EDA stage before modelling: \texttt{price} may be undisclosed (\texttt{null}), some structural fields are often incomplete for particular property types, and the collection includes both sale and rental listings, with no variable that distinguishes them. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
