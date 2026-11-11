@@ -1,9 +1,0 @@
-# Optional, heavy dependencies for the deep-learning notebooks 07-08:
-#   pip install -r requirements-extra.txt
-# Versions are intentionally unpinned; pin them once you know what works on your machine.
-# For a GPU build of torch, follow https://pytorch.org/get-started/locally/ first.
-torch
-transformers
-accelerate
-datasets
-pyvi
