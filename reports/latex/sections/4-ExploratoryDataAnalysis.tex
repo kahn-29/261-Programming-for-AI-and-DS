@@ -1,3 +1,6 @@
+\providecommand{\figplaceholder}[2]{%
+  \fbox{\parbox[c][#1][c]{0.92\linewidth}{\centering\small\itshape [Insert figure here: #2]}}}
+
 \section{Exploratory Data Analysis (EDA)}
 \label{sec:eda}
 
@@ -7,7 +10,7 @@ This section assesses the quality of the raw listings, constructs the analytical
 \label{subsec:eda-quality}
 
 \paragraph{Schema and data types.}
-The raw data contain 3,500,744 listings and the 19 variables described in Table~\ref{tab:feature-meanings}. All expected columns were present, with no additional columns. Eight variables are numeric (\texttt{price}, \texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}) and the remaining eleven are text. Six categorical columns were converted to the categorical type, which reduced memory use from 9.331~GB to 7.980~GB. A conservative strategy was adopted: quality problems were flagged without removing rows from the full dataset, and a separate subset of priced listings was constructed afterwards (Section~\ref{subsec:eda-analytical}).
+The raw data contain 3,500,744 listings and the 19 variables described in Table~\ref{tab:feature-meanings}. All expected columns were present, with no additional columns. Eight variables are numeric (\texttt{price}, \texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}) and the remaining eleven are text. Six categorical columns were converted to the categorical type, which reduced memory use from 6.533~GB to 5.334~GB. A conservative strategy was adopted: quality problems were flagged without removing rows from the full dataset, and a separate subset of priced listings was constructed afterwards (Section~\ref{subsec:eda-analytical}).
 
 \paragraph{Missing values.}
 Table~\ref{tab:missing} reports the missing values per variable. Five variables are complete, \texttt{area} is missing in 4 listings, and \texttt{price} is missing in 218,494 listings (6.24\%). Several structural attributes have high missing rates, ranging from 68.96\% for \texttt{house\_direction} to 98.04\% for \texttt{house\_depth}. A missing \texttt{project\_name} often indicates that the listing does not belong to a named development project.
@@ -35,7 +38,11 @@ Variable & Missing ($n$) & Missing (\%) \\
 \texttt{price}               &   218,494 &  6.24 \\
 \texttt{district\_name}      &   101,933 &  2.91 \\
 \texttt{area}                &         4 & $<$0.01 \\
-\texttt{name}, \texttt{description}, \texttt{property\_type\_name}, \texttt{province\_name}, \texttt{published\_at} & 0 & 0.00 \\
+\texttt{name}                &         0 & 0.00 \\
+\texttt{description}         &         0 & 0.00 \\
+\texttt{property\_type\_name}&         0 & 0.00 \\
+\texttt{province\_name}      &         0 & 0.00 \\
+\texttt{published\_at}       &         0 & 0.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -59,7 +66,7 @@ The variable \texttt{published\_at} had no missing values, but 22,024 values cou
 Listings were flagged as duplicates when they share the normalised \texttt{name}, \texttt{province\_name}, \texttt{district\_name}, \texttt{ward\_name} (lower case, diacritics removed, \textit{đ} mapped to \textit{d}, whitespace collapsed), together with the same \texttt{area} and \texttt{price}, as an earlier listing; the first occurrence is kept. Under this definition, 865,362 listings (24.72\%) are duplicates. The ten most repeated combinations occur between 60 and 121 times each, all in Hồ Chí Minh, and eight of the ten share the same title opening (\textit{xuat canh ban gap}, normalised form).
 
 \paragraph{Extreme prices.}
-In the priced, de-duplicated data, the distribution of \texttt{price} on logarithmic axes (Figure~\ref{fig:price-loglog}) is concentrated between about $10^{9}$ and $10^{10}$ VND, with isolated listings below $10^{4}$ VND and above $10^{15}$ VND. The ten lowest prices are between 1,000 and 3,000 VND, and in several of them the title states a different price (for example, a listing recorded at 2,000 VND is titled as 1.6 billion VND). The ten highest range from about $4.49\times10^{14}$ to $2.66\times10^{16}$ VND, and some have very large areas (for example, 999,999~m\textsuperscript{2}). These observations suggest data entry errors, for example in the unit of the price. A range of $[10^{8}, 10^{12}]$ VND (100 million to 1,000 billion VND) was therefore applied; it removes 2,574 listings (0.107\%).
+In the priced, de-duplicated data, the distribution of \texttt{price} on logarithmic axes (Figure~\ref{fig:price-loglog}) is concentrated between about $10^{9}$ and $10^{10}$ VND, with isolated listings below $10^{4}$ VND and above $10^{15}$ VND. The ten lowest prices are between 1,000 and 3,000 VND, and in several of them the title states a different price (for example, a listing recorded at 2,000 VND is titled as 1.6 billion VND). The ten highest range from about $4.49\times10^{14}$ to $2.66\times10^{16}$ VND, and some have very large areas (for example, 999,999~m\textsuperscript{2}). These observations suggest data entry errors, for example in the unit of the price. A range of $[10^{8}, 10^{12}]$ VND (100 million to 1,000 billion VND) was therefore examined: it would remove 2,574 listings (0.107\%), and it was applied as a cleaning step (Section~\ref{subsec:eda-analytical}).
 
 \begin{figure}[H]
 \centering
@@ -68,40 +75,75 @@ In the priced, de-duplicated data, the distribution of \texttt{price} on logarit
 \label{fig:price-loglog}
 \end{figure}
 
+\paragraph{Extreme values in other attributes.}
+The numeric attributes and the price per square metre were inspected in the same data (Figure~\ref{fig:attr-hist}; $\log_{10}$ scale on the horizontal axis and logarithmic scale on the vertical axis). In each panel most listings lie in a narrow range, while sparse tails extend over several orders of magnitude. The maximum values are 82,000,000~m\textsuperscript{2} for \texttt{area}, 255 for \texttt{floor\_count}, 9,080,000~m for \texttt{frontage\_width}, 15,380~m for \texttt{house\_depth}, 18,000~m for \texttt{road\_width}, 200 for \texttt{bedroom\_count}, 168 for \texttt{bathroom\_count}, and about $2.70\times10^{13}$ VND per m\textsuperscript{2} for \texttt{price\_per\_m2}. These values are not plausible for most properties. The separated bars for \texttt{floor\_count}, \texttt{bedroom\_count}, and \texttt{bathroom\_count} reflect that these variables take integer values.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/attribute_distributions_log.png}
+\caption{Distributions of the numeric attributes and of the price per square metre ($\log_{10}$ scale; vertical axis in logarithmic scale), before the plausibility limits are applied. The maximum of each variable is given in the panel title of the original figure.}
+\label{fig:attr-hist}
+\end{figure}
+
 \subsection{Analytical Dataset}
 \label{subsec:eda-analytical}
 
-The analytical dataset (\texttt{df\_priced}) was built in three steps: retaining listings with $\text{price} > 0$ and $\text{area} > 0$, removing the flagged duplicates, and retaining prices within $[10^{8}, 10^{12}]$ VND. Table~\ref{tab:flow} gives the number of listings after each step. The final dataset contains 2,412,798 listings.
+The analytical dataset (\texttt{df\_priced}) was built in six steps, applied in the order of Table~\ref{tab:flow}: (i) retaining listings with $\text{price} > 0$ and $\text{area} > 0$; (ii) removing the flagged duplicates; (iii) retaining prices within $[10^{8}, 10^{12}]$ VND; (iv) removing listings without a valid publication date; (v) applying plausibility limits to \texttt{area} and the other numeric attributes (Table~\ref{tab:limits}); and (vi) removing listings with a price per square metre above 2 billion VND. In step (v), listings with an \texttt{area} outside its limits were removed, whereas for the other six attributes the out-of-range values were set to missing and the listings were retained. The number of values outside the limits was counted before step (v) was applied. The final dataset contains 2,397,001 listings.
 
-\begin{table}[H]
+% TODO (author): the notebook does not state why these limits and the cap of 2 billion VND per m2 were chosen; add one sentence of justification here.
+
+\begin{table}[htbp]
+\centering
+\caption{Plausibility limits applied to the numeric attributes.}
+\label{tab:limits}
+\small
+\begin{tabular}{llrl}
+\toprule
+Variable & Valid range & Values outside ($n$) & Treatment \\
+\midrule
+\texttt{area} (m\textsuperscript{2}) & $[10, 100{,}000]$ & 876 & Row removed \\
+\texttt{floor\_count}     & $[1, 50]$    &   8 & Set to missing \\
+\texttt{frontage\_width} (m) & $[1, 200]$ & 761 & Set to missing \\
+\texttt{house\_depth} (m) & $[2, 500]$   &  70 & Set to missing \\
+\texttt{road\_width} (m)  & $[1, 100]$   & 424 & Set to missing \\
+\texttt{bedroom\_count}   & $[1, 50]$    & 340 & Set to missing \\
+\texttt{bathroom\_count}  & $[1, 50]$    & 267 & Set to missing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
 \centering
 \caption{Number of listings after each filtering step.}
 \label{tab:flow}
 \small
-\begin{tabular}{lrr}
+\begin{tabular}{llrr}
 \toprule
-Step & Listings ($n$) & Removed ($n$) \\
+Step & Rule & Listings ($n$) & Removed ($n$) \\
 \midrule
-Raw data                                     & 3,500,744 & --- \\
-Price $> 0$ and area $> 0$                   & 3,224,930 & 275,814 \\
-After removing duplicates                    & 2,415,372 & 809,558 \\
-Price within $[10^{8}, 10^{12}]$ VND (final) & 2,412,798 &   2,574 \\
+0 & Raw data                                         & 3,500,744 & --- \\
+1 & Price $> 0$ and area $> 0$                       & 3,224,930 & 275,814 \\
+2 & Duplicates removed                               & 2,415,372 & 809,558 \\
+3 & Price within $[10^{8}, 10^{12}]$ VND             & 2,412,798 &   2,574 \\
+4 & Valid publication date                           & 2,398,343 &  14,455 \\
+5 & Area within $[10, 100{,}000]$ m\textsuperscript{2} & 2,397,467 &     876 \\
+6 & Price per m\textsuperscript{2} $\leq 2\times10^{9}$ VND (final) & 2,397,001 & 466 \\
 \bottomrule
 \end{tabular}
 
 \vspace{0.3em}
-\footnotesize The number removed in the duplicate step is the difference between the counts before and after the step.
+\footnotesize The number removed in step 2 is the difference between the counts before and after the step.
 \end{table}
 
 \subsection{Distributions and Relationships in the Analytical Dataset}
 \label{subsec:eda-price}
 
 \paragraph{Descriptive profile.}
-Table~\ref{tab:describe} reports descriptive statistics of the numeric variables. \texttt{price} and \texttt{area} are available for all listings, whereas the other attributes are available for fewer (from 59,040 for \texttt{house\_depth} to 1,312,102 for \texttt{bedroom\_count}). The median price is 7.4 billion VND and the mean ($1.50\times10^{10}$ VND) is about twice as large, which indicates a right-skewed distribution; \texttt{area} behaves similarly (median 80~m\textsuperscript{2}, mean 416~m\textsuperscript{2}). Several attributes have maxima that are very large relative to their upper quartile, such as \texttt{frontage\_width} ($9.08\times10^{6}$~m), \texttt{road\_width} (18,000~m), \texttt{house\_depth} (15,380~m), \texttt{floor\_count} (255), \texttt{bedroom\_count} (200), and \texttt{bathroom\_count} (168). These values are not plausible for most properties and were not removed or corrected at this stage.
+Table~\ref{tab:describe} reports descriptive statistics of the numeric variables after the cleaning steps. \texttt{price} and \texttt{area} are available for all listings, whereas the other attributes are available for fewer (from 58,878 for \texttt{house\_depth} to 1,304,397 for \texttt{bedroom\_count}). The median price is 7.4 billion VND and the mean ($1.49\times10^{10}$ VND) is about twice as large, which indicates a right-skewed distribution; \texttt{area} behaves similarly (median 80~m\textsuperscript{2}, mean 217~m\textsuperscript{2}, standard deviation 1,619~m\textsuperscript{2}). The maximum of each attribute now equals the upper limit of Table~\ref{tab:limits} (for example, 100,000~m\textsuperscript{2} for \texttt{area} and 200~m for \texttt{frontage\_width}), so the tails are bounded.
 
 \begin{table}[htbp]
 \centering
-\caption{Descriptive statistics of numeric variables in the analytical dataset ($N = 2{,}412{,}798$).}
+\caption{Descriptive statistics of numeric variables in the analytical dataset ($N = 2{,}397{,}001$).}
 \label{tab:describe}
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -109,20 +151,20 @@ Table~\ref{tab:describe} reports descriptive statistics of the numeric variables
 \toprule
 Variable & Count & Mean & Std. dev. & Min & 25\% & 50\% & 75\% & Max \\
 \midrule
-\texttt{price} (VND)  & 2,412,798 & $1.50\times10^{10}$ & $3.29\times10^{10}$ & $1.00\times10^{8}$ & $4.05\times10^{9}$ & $7.40\times10^{9}$ & $1.43\times10^{10}$ & $1.00\times10^{12}$ \\
-\texttt{area} (m\textsuperscript{2}) & 2,412,798 & 416.01 & 92,269.19 & 1.20 & 56.00 & 80.00 & 120.00 & $8.20\times10^{7}$ \\
-\texttt{floor\_count} & 517,454 & 3.90 & 1.81 & 1 & 3 & 4 & 5 & 255 \\
-\texttt{frontage\_width} (m) & 1,217,495 & 23.38 & 10,391.43 & 0.50 & 4.20 & 5.00 & 7.60 & $9.08\times10^{6}$ \\
-\texttt{house\_depth} (m) & 59,040 & 23.84 & 97.32 & 1.00 & 13.40 & 18.75 & 24.75 & 15,380 \\
-\texttt{road\_width} (m) & 416,300 & 9.54 & 47.69 & 0.50 & 4.00 & 6.00 & 10.50 & 18,000 \\
-\texttt{bedroom\_count} & 1,312,102 & 3.31 & 2.59 & 1 & 2 & 3 & 4 & 200 \\
-\texttt{bathroom\_count} & 1,228,546 & 3.06 & 2.55 & 1 & 2 & 2 & 4 & 168 \\
+\texttt{price} (VND)  & 2,397,001 & $1.49\times10^{10}$ & $3.20\times10^{10}$ & $1.00\times10^{8}$ & $4.05\times10^{9}$ & $7.40\times10^{9}$ & $1.43\times10^{10}$ & $1.00\times10^{12}$ \\
+\texttt{area} (m\textsuperscript{2}) & 2,397,001 & 217.38 & 1,619.32 & 10.00 & 56.00 & 80.00 & 120.00 & 100,000 \\
+\texttt{floor\_count} & 516,628 & 3.90 & 1.76 & 1 & 3 & 4 & 5 & 50 \\
+\texttt{frontage\_width} (m) & 1,208,300 & 7.54 & 8.97 & 1.00 & 4.20 & 5.00 & 7.50 & 200 \\
+\texttt{house\_depth} (m) & 58,878 & 22.57 & 20.84 & 2.00 & 13.41 & 18.75 & 24.64 & 500 \\
+\texttt{road\_width} (m) & 414,645 & 9.08 & 8.62 & 1.00 & 4.00 & 6.00 & 10.50 & 100 \\
+\texttt{bedroom\_count} & 1,304,397 & 3.30 & 2.34 & 1 & 2 & 3 & 4 & 50 \\
+\texttt{bathroom\_count} & 1,220,972 & 3.05 & 2.34 & 1 & 2 & 2 & 4 & 50 \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 \paragraph{Distribution of price and area.}
-On a base-10 logarithmic scale (Figure~\ref{fig:log-hist}), the distribution of price is unimodal and approximately symmetric, with a mode at about 9.9 (roughly 8 billion VND) and values mainly between 8.5 and 11.5. The distribution of area is unimodal with a mode at about 1.9 to 2.0 (roughly 80 to 100~m\textsuperscript{2}) and a long right tail. Given the right skew shown in Table~\ref{tab:describe}, this supports the use of a log transformation for price.
+On a base-10 logarithmic scale (Figure~\ref{fig:log-hist}), the distribution of price is unimodal and approximately symmetric, with a mode at about 9.9 (roughly 8 billion VND) and values mainly between 8.5 and 11.5. The distribution of area is unimodal with a mode at about 1.9 to 2.0 (roughly 80 to 100~m\textsuperscript{2}) and a right tail that extends to about 5 (the upper limit of 100,000~m\textsuperscript{2}). Given the right skew shown in Table~\ref{tab:describe}, this supports the use of a log transformation for price.
 
 \begin{figure}[H]
 \centering
@@ -132,10 +174,10 @@ On a base-10 logarithmic scale (Figure~\ref{fig:log-hist}), the distribution of 
 \end{figure}
 
 \paragraph{Group coverage.}
-Groups with fewer than 100 listings were considered difficult to use as features. All five property types exceed this threshold: houses (1,080,119), land (565,074), apartments (547,956), villas/townhouses (180,047), and shophouses (39,602). Of the 63 provinces, 60 exceed it. Listings are concentrated in Hồ Chí Minh (933,078) and Hà Nội (782,054), which together account for about 71\% of the analytical dataset.
+Groups with fewer than 100 listings were considered difficult to use as features. All five property types exceed this threshold: houses (1,074,788), land (560,294), apartments (544,268), villas/townhouses (178,654), and shophouses (38,997). Of the 63 provinces, 60 exceed it. Listings are concentrated in Hồ Chí Minh (928,687) and Hà Nội (776,760), which together account for about 71\% of the analytical dataset.
 
 \paragraph{Area and price.}
-A scatter plot on logarithmic axes, using a random sample of 20,000 listings (seed 42), is shown in Figure~\ref{fig:scatter}. Most points lie at areas of roughly 30 to 300~m\textsuperscript{2} and prices of roughly $10^{9}$ to $10^{10}$ VND. The cloud shows an upward tendency, so larger areas are generally associated with higher prices, but the dispersion at a given area is wide, and points become sparse above $10^{3}$~m\textsuperscript{2}. This plot is a visual indication only; the strength of the association was not quantified.
+A scatter plot on logarithmic axes, using a random sample of 20,000 listings (seed 42), is shown in Figure~\ref{fig:scatter}. The area axis spans 10 to $10^{5}$~m\textsuperscript{2}, the limits applied in the cleaning. Most points lie at areas of roughly 30 to 300~m\textsuperscript{2} and prices of roughly $10^{9}$ to $10^{10}$ VND. The cloud shows an upward tendency, so larger areas are generally associated with higher prices, but the dispersion at a given area is wide, and points become sparse above $10^{3}$~m\textsuperscript{2}. This plot is a visual indication only; the strength of the association was not quantified.
 
 \begin{figure}[H]
 \centering
@@ -145,16 +187,16 @@ A scatter plot on logarithmic axes, using a random sample of 20,000 listings (se
 \end{figure}
 
 \paragraph{Price per square metre by property type.}
-The price per square metre (\texttt{price\_per\_m2}) is \texttt{price} divided by \texttt{area}. Its $\log_{10}$ distribution for each property type is shown in Figure~\ref{fig:ppm2}, with the horizontal axis restricted to 6--10. Houses and villas/townhouses are centred at higher values (modes at about 8.3 and 8.2, roughly 200 and 160 million VND per m\textsuperscript{2}) than apartments and land (modes at about 7.8). Land has the widest, left-skewed distribution, and apartments the narrowest. Shophouses show two local maxima, at about 7.8--7.9 and 8.2, which may indicate a mix of different kinds of listing (for example, sale and rental); this was not tested and remains a hypothesis.
+The price per square metre (\texttt{price\_per\_m2}) is \texttt{price} divided by \texttt{area}. Its $\log_{10}$ distribution for each property type is shown in Figure~\ref{fig:ppm2}, with the horizontal axis restricted to 6--10 (the data are capped at 2 billion VND per m\textsuperscript{2}, i.e.\ $\log_{10} \approx 9.3$). Houses and villas/townhouses are centred at higher values (modes at about 8.3 and 8.2, roughly 200 and 160 million VND per m\textsuperscript{2}) than apartments and land (modes at about 7.8). Land has the widest, left-skewed distribution, and apartments the narrowest. Shophouses show two local maxima, at about 7.8--7.9 and 8.2, which may indicate a mix of different kinds of listing (for example, sale and rental); this was not tested and remains a hypothesis.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{figures/price_per_m2_by_type.png}
-\caption{Distribution of $\log_{10}(\text{price per m}^2)$ by property type (houses $n = 1{,}080{,}119$; land $n = 565{,}074$; apartments $n = 547{,}956$; villas/townhouses $n = 180{,}047$; shophouses $n = 39{,}602$).}
+\caption{Distribution of $\log_{10}(\text{price per m}^2)$ by property type (houses $n = 1{,}074{,}788$; land $n = 560{,}294$; apartments $n = 544{,}268$; villas/townhouses $n = 178{,}654$; shophouses $n = 38{,}997$).}
 \label{fig:ppm2}
 \end{figure}
 
 \subsection{Summary}
 \label{subsec:eda-summary}
 
-Missing values are frequent for structural attributes and depend on the property type, 24.72\% of the raw listings were flagged as duplicates, and 7.88\% lack a valid price or area; after filtering, 2,412,798 listings remain. Price and area are right-skewed, and the log transformation of price gives an approximately symmetric distribution, while extreme values in several physical attributes remain untreated. All five property types and 60 of 63 provinces have sufficient listings, although listings are concentrated in two provinces. Area and price show a positive but widely dispersed relationship, and the price per square metre differs by property type.
+Missing values are frequent for structural attributes and depend on the property type, 24.72\% of the raw listings were flagged as duplicates, and 7.88\% lack a valid price or area. Extreme values were found in price, area, the other physical attributes, and the price per square metre, and were handled with fixed limits; after all filtering steps, 2,397,001 listings remain. Price and area are right-skewed, and the log transformation of price gives an approximately symmetric distribution. All five property types and 60 of 63 provinces have sufficient listings, although listings are concentrated in two provinces. Area and price show a positive but widely dispersed relationship, and the price per square metre differs by property type.
