@@ -22,8 +22,6 @@ pip install -r requirements.txt
 | `notebooks/08_model_bamibert.ipynb` | `priced_listings.parquet` | `reports/metrics/08_bamibert.csv`, `reports/predictions/08_bamibert.parquet` |
 | `notebooks/09_model_ensemble.ipynb` | `reports/predictions/*.parquet` | `reports/metrics/09_ensemble.csv` |
 
-> Note: Notebooks `07` and `08` require a GPU (configured for Google Colab).
-
 ## Results (Test Set)
 
 | Model | MAE (bn VND) | RMSE (bn VND) | R² | MAPE (%) |
