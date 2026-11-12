@@ -24,7 +24,7 @@ Table~\ref{tab:all-model-results} compares 11 individual predictors and four ble
 
 \begin{table}[H]
 \centering
-\caption[Complete test-set comparison]{Test-set performance for all individual models and blends. MAE and RMSE are in billion VND. Bold values identify the best result in each metric.}
+\caption[Complete test-set comparison]{Held-out test performance for the evaluated models and blends. MAE and RMSE are in billion VND; bold marks the best observed values.}
 \label{tab:all-model-results}
 \small
 \renewcommand{\arraystretch}{1.1}
@@ -44,42 +44,44 @@ XGBoost & 4.485 & 18.401 & 0.733 & 26.42 \\
 Joint text--structured Ridge & 4.935 & 21.606 & 0.632 & 28.09 \\
 LightGBM + text prediction & 4.223 & 17.317 & 0.764 & 25.05 \\
 MLP + embeddings & 4.620 & 19.264 & 0.707 & 26.83 \\
-BamiBERT (text only) & 4.355 & 17.353 & 0.763 & 26.86 \\
+BamiBERT (text only)$^{\dagger}$ & 4.355 & 17.353 & 0.763 & 26.86 \\
 \midrule
 Structured blend & 4.241 & 17.357 & 0.762 & 25.90 \\
 Structured + TF-IDF blend & 4.025 & 17.020 & 0.772 & 24.31 \\
-Structured + BamiBERT blend & 3.699 & 16.283 & 0.791 & 21.94 \\
-\textbf{All-model blend} & \textbf{3.659} & \textbf{16.171} & \textbf{0.794} & \textbf{21.70} \\
+Structured + BamiBERT blend$^{\dagger}$ & 3.699 & 16.283 & 0.791 & 21.94 \\
+\textbf{All-model blend}$^{\dagger}$ & \textbf{3.659} & \textbf{16.171} & \textbf{0.794} & \textbf{21.70} \\
 \bottomrule
 \end{tabularx}
+\par\vspace{0.3em}
+\begin{minipage}{\textwidth}
+\footnotesize $^{\dagger}$ Results involving BamiBERT await checkpoint-reload verification and do not establish that all trained weights were restored correctly.
+\end{minipage}
 \end{table}
 
-LightGBM is the strongest purely structured individual predictor by MAE (4.464 billion VND), closely followed by XGBoost (4.485). Both outperform the MLP, providing no standalone advantage for neural tabular prediction.
+On this held-out test set, LightGBM has the lowest MAE among the evaluated purely structured individual predictors (4.464 billion VND), closely followed by XGBoost (4.485). Both have lower test MAE than the MLP.
 
 \subsection{Contribution of Text and Prediction Blending}
 
-Adding TF-IDF to structured Ridge reduces MAE by 13.9\%, from 5.730 to 4.935 billion VND. Adding a text-derived prediction to LightGBM gives a 5.4\% reduction, from 4.464 to 4.223 billion VND, producing the strongest individual predictor by MAE.
+On the held-out test set, adding TF-IDF to structured Ridge reduces MAE by 13.9\%, from 5.730 to 4.935 billion VND. Adding a text-derived prediction to LightGBM gives a 5.4\% reduction, from 4.464 to 4.223 billion VND, the lowest observed test MAE among the evaluated individual predictors.
 
 BamiBERT achieves MAE of 4.355 billion VND from text alone. However, it retains non-price numbers while TF-IDF removes digit-bearing tokens. This comparison therefore combines a change in encoder with a change in available input information.
 
-The structured blend achieves MAE of 4.241 billion VND. Adding TF-IDF predictors reduces this to 4.025, while adding BamiBERT reduces it to 3.699. The all-model blend performs best across all four metrics, with MAE of 3.659 billion VND and $R^2=0.794$ (Figure~\ref{fig:model-comparison}).
+On this test partition, the structured blend achieves MAE of 4.241 billion VND; adding TF-IDF yields 4.025 and adding BamiBERT yields 3.699. The all-model blend has the best observed values across the four metrics among the evaluated configurations, with MAE of 3.659 billion VND and $R^2=0.794$ (Figure~\ref{fig:model-comparison}). BamiBERT-dependent results await checkpoint-reload verification.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{figures/conclusion_model_comparison.png}
-\caption[Individual models and blends: test MAE]{Test MAE for selected individual predictors and four blends. Lower is better. The full numerical comparison appears in Table~\ref{tab:all-model-results}.}
+\caption[Individual models and blends: test MAE]{Held-out test MAE for selected predictors and blends; lower is better. $\dagger$ Results involving BamiBERT await checkpoint-reload verification.}
 \label{fig:model-comparison}
 \end{figure}
 
 The all-model blend reduces MAE by 13.4\% relative to text-enhanced LightGBM and by 18.0\% relative to structured LightGBM. Its gain over the smaller structured--BamiBERT blend is only 1.1\%. Stacking combines complementary predictions~\cite{wolpert1992stacked}, but inference-time measurements are needed to assess the cost of this final increment in accuracy.
 
-RMSE remains much larger than MAE, indicating persistent large errors. The Ridge diagnostic (Figure~\ref{fig:ml-ridge-diagnostic}) also shows underprediction of several expensive listings.
-
 \subsection{Limitations}
 \label{subsec:evaluation-limitations}
 
 \paragraph{Data quality and population coverage.}
-The target is an advertised asking price, without verified transactions or reliable sale/rental labels. Geographic coverage is concentrated in major cities, and inaccurate values may survive filtering. Duplicate removal matches listing attributes rather than property entities; revised titles or prices can leave repeated properties across partitions. Accuracy is not established separately for each province, property type, or price range.
+The target is an advertised asking price, without verified transactions or reliable sale/rental labels. Ho Chi Minh City and Hanoi account for approximately 71\% of the full analytical dataset. Inaccurate values may survive filtering, and revised titles or prices can leave repeated properties across partitions. Accuracy is not established separately for each province, property type, price range, or future period.
 
 \paragraph{Model-selection and stacking protocol.}
 Only one temporal holdout is evaluated, and final fitting populations differ. Validation is reused for tuning, stopping, and blend fitting. The text-derived feature uses ordinary five-fold prediction with a vocabulary fitted before the folds, rather than forward-chaining preprocessing. Repeated seeds, additional time windows, and uncertainty intervals are needed to assess stability and statistical significance.

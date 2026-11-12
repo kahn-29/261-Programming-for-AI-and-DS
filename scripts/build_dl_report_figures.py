@@ -139,8 +139,8 @@ with (ROOT / "reports/metrics/09_ensemble.csv").open(encoding="utf-8") as f:
     metrics = {r[""]: r for r in csv.DictReader(f)}
 order = ["LightGBM", "MLP", "BamiBERT", "LightGBM + text", "Blend: structured",
          "Blend: structured + TF-IDF", "Blend: structured + BamiBERT", "Blend: all"]
-names = ["LightGBM", "MLP + embeddings", "BamiBERT (text only)", "LightGBM + text",
-         "Structured blend", "Structured + TF-IDF blend", "Structured + BamiBERT blend", "All-model blend"]
+names = ["LightGBM", "MLP + embeddings", "BamiBERT (text only)†", "LightGBM + text",
+         "Structured blend", "Structured + TF-IDF blend", "Structured + BamiBERT blend†", "All-model blend†"]
 scores = [float(metrics[k]["MAE (bn VND)"]) for k in order]
 fig, ax = plt.subplots(figsize=(9.4, 4.2), layout="constrained")
 bars = ax.barh(range(len(order)), scores, color=["#7597b0"]*4+["#b8a5c9"]*3+["#287e68"], height=.65)
