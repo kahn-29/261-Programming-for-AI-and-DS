@@ -1,12 +1,8 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-This study examined machine learning and deep learning approaches to predicting real estate asking prices in Vietnam. Data-quality checks reduced 3,500,744 raw listings to 2,397,001 modelling observations. Hierarchical location features, missing-value treatment, text processing, and a chronological holdout provided a common basis for comparing the predictors.
+This study compared machine learning and deep learning models for predicting real estate asking prices in Vietnam, using a common cleaned dataset and a chronological holdout.
 
-On the held-out test set, LightGBM achieved lower MAE than the embedding-based MLP, consistent with the importance of competitive tabular baselines discussed by \textcite{gorishniy2021revisiting}. Text-enhanced LightGBM reduced test MAE by approximately 5.4\% relative to its structured counterpart. These comparisons describe the evaluated configurations under one chronological split, without isolating an intrinsic advantage of any model architecture.
+On the held-out test set, boosted trees were the strongest models on structured attributes and outperformed the embedding-based MLP, in line with the strength of tabular baselines reported by \textcite{gorishniy2021revisiting}. Listing text improved every model it was added to, and BamiBERT on text alone outperformed the best structured model. Combining all models gave the lowest MAE (3.659 billion VND, $R^2=0.794$), although most of that gain was already reached by the structured + BamiBERT blend.
 
-Among the evaluated configurations, the all-model blend had the lowest observed test MAE (3.659 billion VND), with $R^2=0.794$. Because the blend includes BamiBERT, this result remains provisional pending checkpoint-reload verification. Its observed MAE was approximately 13.4\% below the best evaluated individual predictor and 1.1\% below the smaller structured--BamiBERT blend. The incremental gain should be assessed alongside inference cost once checkpoint correctness has been verified.
-
-These findings apply to advertised asking prices under the study's evaluation protocol, subject to the data-quality and model-selection limitations in Section~\ref{subsec:evaluation-limitations}.
-
-Further work should prioritise checkpoint and text audits, property-level identifiers, and repeated temporal evaluations. Province-, property-type-, and price-range analyses would reveal where errors are concentrated, while transaction-verified targets and uncertainty estimates would support a more realistic assessment of practical valuation performance.
+These results concern advertised asking prices under a single time-based split, and are subject to the limitations in Section~\ref{subsec:evaluation-limitations}. Further work should check the text for residual price mentions, add property-level identifiers, repeat the evaluation over several time windows, and analyse errors by province, property type and price range. Transaction-verified prices and uncertainty estimates would give a more realistic picture of practical valuation performance.

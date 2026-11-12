@@ -1,31 +1,18 @@
 \section{Exploratory Data Analysis (EDA)}
 \label{sec:eda}
 
-Data-quality checks establish which listings can support price prediction and which attributes require special treatment. The analysis covers listings with a disclosed asking price in VND. Sale and rental advertisements cannot be separated reliably because the data do not contain a transaction-type label (Section~\ref{sec:chosen-data}).
+Data-quality checks establish which listings can support price prediction and which attributes require special treatment. The analysis covers listings with a disclosed asking price in VND.
 
 \subsection{Data Quality Analysis}
 \label{subsec:eda-quality}
 
 \subsubsection{Schema and Data Types}
 
-The raw data contain 3,500,744 listings and the 19 variables described in Table~\ref{tab:feature-meanings}. The schema check confirmed that all expected columns are present and that there are no additional columns. The data types are as follows:
-
-\begin{itemize}
-  \item Numeric (8 variables): \texttt{price}, \texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}.
-  \item Text (11 variables): all remaining variables.
-\end{itemize}
-
-To reduce memory usage, six categorical columns were converted to the categorical type, which reduced the memory footprint from 6.533~GB to 5.334~GB. A conservative cleaning strategy was adopted: quality issues were flagged and all rows were kept in the full dataset, while a separate subset of priced listings was built afterwards (Section~\ref{subsec:eda-analytical}).
+The raw data contain 3,500,744 listings and the 19 variables described in Table~\ref{tab:feature-meanings}. Eight variables are numeric (\texttt{price}, \texttt{area}, \texttt{floor\_count}, \texttt{frontage\_width}, \texttt{house\_depth}, \texttt{road\_width}, \texttt{bedroom\_count}, \texttt{bathroom\_count}) and the remaining eleven are text. All raw rows are retained during preliminary exploration, while a dedicated subset of priced listings is constructed for modelling (Section~\ref{subsec:eda-analytical}).
 
 \subsubsection{Missing-Value Analysis}
 
-The null-value scan showed missing entries in 14 of the 19 variables (Table~\ref{tab:missing}). The main findings are:
-
-\begin{itemize}
-  \item \texttt{price}: 218,494 missing values (6.24\%), and \texttt{area}: 4 missing values.
-  \item Missingness is particularly high for direction and dimension attributes: 68.96\% for \texttt{house\_direction} and 98.04\% for \texttt{house\_depth}.
-  \item \texttt{name}, \texttt{description}, \texttt{property\_type\_name}, \texttt{province\_name}, and \texttt{published\_at} have no missing values.
-\end{itemize}
+The null-value scan showed missing entries in 14 of the 19 variables (Table~\ref{tab:missing}). Direction and dimension attributes are the most affected, for example \texttt{house\_direction} (68.96\%) and \texttt{house\_depth} (98.04\%). \texttt{price} is missing for 6.24\% of the listings and \texttt{area} for only 4. The remaining variables, including \texttt{name}, \texttt{description}, \texttt{property\_type\_name}, \texttt{province\_name}, and \texttt{published\_at}, are complete.
 
 \begin{table}[htbp]
 \centering
@@ -70,7 +57,7 @@ Missingness differs by property type (Figure~\ref{fig:missing-type}), indicating
   \item \texttt{price} is missing in 4\% to 10\% of the listings of each type.
 \end{itemize}
 
-Rows with missing values were retained in the dataset, and listings without a valid price are excluded later from the price analysis.
+Rows with missing values were retained; listings without a valid price are excluded only from the price analysis.
 
 \subsubsection{Validity Checks}
 
@@ -82,16 +69,16 @@ Basic numeric validity checks identified the following cases:
   \item \texttt{floor\_count}, \texttt{bedroom\_count}, \texttt{bathroom\_count}: no negative values.
 \end{itemize}
 
-Listings without a valid price or area represent 7.88\% of the raw data. This share ranges from 5.2\% (\textit{Nhà}) to 13.6\% (\textit{Shophouse}) across the five property types, and from 4.1\% (Khánh Hòa and Lâm Đồng) to 18.8\% (Hòa Bình) among the 15 provinces with the most listings. The variation in exclusion rates means that filtering does not affect every property type and province equally.
+Listings missing price or area account for 7.88\% of the raw data, varying from 5.2\% (\textit{Nhà}) to 13.6\% (\textit{Shophouse}), and from 4.1\% (Khánh Hòa) to 18.8\% (Hòa Bình).
 
 \subsubsection{Temporal, Geographic and Direction Checks}
 
-Time, location, and direction variables require the following treatment:
+Time, location, and direction variables show the following patterns:
 
 \begin{itemize}
-  \item \texttt{published\_at}: no missing values in the raw data, but 22,024 values could not be converted to a timestamp (invalid values were coerced to missing). The parsed values span 1 June 2025 to 30 March 2026.
-  \item Geography: the data contain 63 provinces and 627 districts. A total of 15 district names appear in more than one province, so \texttt{district\_name} should be used together with \texttt{province\_name}.
-  \item Direction: \texttt{house\_direction} and \texttt{balcony\_direction} are free text, with 2,414,214 and 2,933,342 missing values, respectively. The same direction is sometimes written in two notations (for example, \textit{Đông Nam} and \textit{Đông - Nam}), and a few entries contain several directions, each occurring at most five times in \texttt{house\_direction} and at most four times in \texttt{balcony\_direction}. No standardisation was applied at this stage.
+  \item \texttt{published\_at}: 22,024 records had unparseable timestamps and were excluded from chronological splits. Valid dates span 1 June 2025 to 30 March 2026.
+  \item Geography: the data contain 63 provinces and 627 districts. A total of 15 district names appear in multiple provinces, requiring \texttt{district\_name} to be prefixed with \texttt{province\_name}.
+  \item Direction: \texttt{house\_direction} and \texttt{balcony\_direction} are free-text fields with non-standard formatting (e.g., \textit{Đông Nam} vs.\ \textit{Đông - Nam}) and high sparsity.
 \end{itemize}
 
 \subsubsection{Duplicate Analysis}
@@ -119,7 +106,7 @@ Figure~\ref{fig:price-loglog} shows that most listings are concentrated between 
   \item The ten highest prices range from about $4.49\times10^{14}$ to $2.66\times10^{16}$ VND, and some of these listings have very large areas (for example, 999,999~m\textsuperscript{2}).
 \end{itemize}
 
-These observations suggest data entry errors, for example in the unit of the price. A range of $[10^{8}, 10^{12}]$ VND (100 million to 1,000 billion VND) was therefore examined: it would remove 2,574 listings (0.107\%), and it was applied as a cleaning step (Section~\ref{subsec:eda-analytical}).
+These observations suggest data-entry mistakes (e.g., entering prices in thousands of VND rather than VND). We restrict valid prices to $[10^{8}, 10^{12}]$ VND (100 million to 1,000 billion VND), removing 2,574 obvious outliers (0.11\%).
 
 Similar extremes occur in physical attributes and price per square metre (Figure~\ref{fig:attr-hist}).
 
@@ -130,15 +117,12 @@ Similar extremes occur in physical attributes and price per square metre (Figure
 \label{fig:attr-hist}
 \end{figure}
 
-Figure~\ref{fig:attr-hist} shows narrow central ranges and sparse tails extending over several orders of magnitude. Examples include areas up to 82 million~m\textsuperscript{2}, frontage widths above 9 million~m, and floor counts up to 255. These observations motivate the plausibility limits in Table~\ref{tab:limits}. Invalid optional attributes are set to missing, allowing other information from the listing to remain available for modelling.
+Figure~\ref{fig:attr-hist} shows narrow central ranges with sparse tails extending over several orders of magnitude (e.g., areas up to 82 million~m\textsuperscript{2} and floor counts up to 255). These motivate the plausibility limits in Table~\ref{tab:limits}.
 
 \subsection{Analytical Dataset Construction}
 \label{subsec:eda-analytical}
 
-The analytical dataset was constructed using the six filtering steps in Table~\ref{tab:flow}. Listings first require positive price and area; flagged duplicates and prices outside $[10^{8},10^{12}]$ VND are then removed.
-
-
-The remaining steps remove listings without a valid publication date, apply plausibility limits to \texttt{area} and the other numeric attributes (Table~\ref{tab:limits}), and remove listings with a price per square metre above 2 billion VND. For \texttt{area}, listings outside the limits were removed. For the other six attributes, the out-of-range values were set to missing and the listings were retained. The number of values outside the limits was counted before the area filter was applied. The final dataset contains 2,397,001 listings.
+Table~\ref{tab:flow} details the filtering pipeline that yields the 2,397,001 analytical listings. Plausible limits (Table~\ref{tab:limits}) were applied to numeric attributes: listings with invalid \texttt{area} were removed, while out-of-range values in optional dimensions were replaced with missing values to keep the listing available for modelling.
 
 \begin{table}[htbp]
 \centering
@@ -186,7 +170,7 @@ Step & Rule & Listings ($n$) & Removed ($n$) \\
 \subsection{Price Analysis}
 \label{subsec:eda-price}
 
-The following results describe the 2,397,001 retained listings.
+The following results describe the final analytical dataset.
 
 \subsubsection{General Dataset Profile}
 
@@ -235,7 +219,7 @@ Figure~\ref{fig:log-hist} shows that the distribution of price on the logarithmi
 
 \subsubsection{Group Coverage}
 
-A threshold of 100 listings is used to describe group coverage. Groups below this threshold have limited support for separate empirical comparisons.
+Evaluating groups with a minimum support threshold of 100 listings:
 
 \begin{itemize}
   \item Property types: all 5 types have more than 100 listings: houses (1,074,788), land (560,294), apartments (544,268), villas/townhouses (178,654), and shophouses (38,997).
@@ -254,7 +238,7 @@ A random sample of 20,000 listings (seed 42) illustrates the area--price relatio
 \label{fig:scatter}
 \end{figure}
 
-Figure~\ref{fig:scatter} shows that the area axis spans 10 to $10^{5}$~m\textsuperscript{2}, the limits applied in the cleaning. Most points lie at areas of roughly 30 to 300~m\textsuperscript{2} and prices of roughly $10^{9}$ to $10^{10}$ VND. The cloud shows an upward tendency, so larger areas are generally associated with higher prices, but the dispersion at a given area is wide, and points become sparse above $10^{3}$~m\textsuperscript{2}. The wide dispersion motivates including location and property characteristics alongside area in the prediction models.
+Figure~\ref{fig:scatter} shows that most listings lie between 30--300~m\textsuperscript{2} and $10^{9}$--$10^{10}$~VND. While price generally scales with area, substantial dispersion across several orders of magnitude indicates that size alone cannot explain property prices, motivating the inclusion of location and property attributes.
 
 \subsubsection{Price per Square Metre by Property Type}
 
@@ -279,8 +263,8 @@ Figure~\ref{fig:ppm2} shows that the distributions differ in location and spread
 \label{subsec:eda-summary}
 
 \begin{itemize}
-  \item The raw data contain 3,500,744 listings. Missing values are frequent for structural attributes and depend on the property type.
-  \item 24.72\% of the raw listings were flagged as duplicates and 7.88\% lack a valid price or area. After all filtering steps, 2,397,001 listings remain.
-  \item Price and area are right-skewed, and the log transformation of price gives an approximately symmetric distribution. Extreme values were handled with fixed plausibility limits.
-  \item All five property types and 60 of 63 provinces have sufficient listings, although listings are concentrated in two provinces. Area and price show a positive but widely dispersed relationship, and the price per square metre differs by property type.
+  \item Structural attributes are often missing, depending on the property type. About a quarter of the raw listings were duplicates, and filtering with fixed plausibility limits left 2,397,001 of the 3,500,744 raw listings.
+  \item Price and area are right-skewed; a log transformation makes price approximately symmetric.
+  \item Listings are concentrated in Hồ Chí Minh and Hà Nội, but every property type and almost every province has enough listings for separate comparison.
+  \item Area and price are positively but loosely related, and the price per square metre differs by property type, so location and property characteristics are needed alongside area.
 \end{itemize}

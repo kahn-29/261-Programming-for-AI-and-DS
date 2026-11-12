@@ -1,23 +1,23 @@
 \section{Chosen Data \& Justification}
 \label{sec:chosen-data}
 
-The chosen dataset provides a large number of real-estate listings with a clear numeric target and a wide range of predictors, which suits the prediction of real estate asking prices in Vietnam.
-
 \paragraph{Dataset}
-\textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2025_2026}
+\textit{Tinix Vietnam Real Estate Listings 2025--2026}~\cite{tinix_vietnam_real_estate_2026}.
 
 \paragraph{Overview}
-The collection contains 3{,}500{,}744 sale and rental listings published between June 2025 and March 2026, after a strict property-type filter, and covers all 63 provinces and cities of Vietnam. The listings are distributed as ten Parquet shards, are written primarily in Vietnamese, and are released under the CC BY-NC 4.0 licence for non-commercial academic use.
+The collection contains 3{,}500{,}744 sale and rental listings published between June 2025 and March 2026 across all 63 provinces and cities of Vietnam, released under the CC BY-NC 4.0 licence for non-commercial academic use.
 
 \paragraph{Justification}
-The dataset contains over 3.5 million records, which supports stable exploratory analysis and supervised learning across regions and property types. Its schema separates a numeric target (\texttt{price}) from predictors describing location, property category, size and layout, orientation, textual content, and listing time. Coverage across provinces supports the analysis of regional price differences. Publication timestamps allow training on older listings and evaluating predictions on newer listings, matching the temporal direction of the intended prediction task.
-\paragraph{Limitations} Some asking prices are undisclosed, structural attributes are frequently incomplete, and the collection includes both sale and rental advertisements without a variable that distinguishes them. These issues are examined in Section~\ref{sec:eda}, where an analytical subset of priced listings is constructed for subsequent analysis and model training.
+The collection covers diverse property types and regions across Vietnam, providing a rich set of physical attributes, hierarchical locations, and unstructured descriptions. Its publication timestamps allow chronological splits that reflect realistic valuation scenarios (predicting future prices from past listings).
+
+\paragraph{Limitations}
+Key challenges include undisclosed asking prices, missing values in optional structural attributes (e.g., frontage, road width), the mixture of sale and rental advertisements without an explicit label, and self-reported listing errors. Section~\ref{sec:eda} examines these issues and constructs the cleaned analytical subset used for modelling.
 
 Table~\ref{tab:feature-meanings} defines the 19 variables used in the study.
 
 \begin{table}[htbp]
 \centering
-\caption[Dataset variables]{Variables in the real estate listing dataset~\cite{tinix_vietnam_real_estate_2025_2026}.}
+\caption[Dataset variables]{Variables in the real estate listing dataset~\cite{tinix_vietnam_real_estate_2026}.}
 \label{tab:feature-meanings}
 \small
 \begin{tabular}{llp{7.2cm}}
