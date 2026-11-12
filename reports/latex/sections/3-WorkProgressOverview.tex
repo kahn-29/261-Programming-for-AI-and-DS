@@ -1,1 +1,77 @@
-\section{Work Progress Overview}
+﻿\section{Work Progress Overview}
+\label{sec:work-progress}
+
+The project developed through weekly milestones between 31 August and 11 November 2026. Table~\ref{tab:work-progress} summarises the deliverables reached at each stage, the main difficulties, and the corresponding adjustments. Khánh led dataset preparation and EDA; Tân and Chi developed the machine learning models; Ngân and Thiện developed the neural models and prediction blends.
+
+% Retrospective draft: weekly allocations and meeting topics are reconstructed
+% from project deliverables, not verified against dated meeting records.
+\begingroup
+\small
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{p{1.7cm}p{6.0cm}p{6.0cm}}
+\caption{Weekly progress, difficulties, and responses.}
+\label{tab:work-progress}\\
+\toprule
+Week & Progress reached & Difficulty and response \\
+\midrule
+\endfirsthead
+\multicolumn{3}{l}{\textit{Table~\ref{tab:work-progress} continued.}}\\
+\toprule
+Week & Progress reached & Difficulty and response \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\textit{Continued on the next page.}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\textbf{1}\newline
+31 Aug.--6 Sep. & Agreed on asking-price prediction, selected the Vietnamese real estate dataset, reviewed the available attributes, and divided the work among five members. & Listings include both sale and rental advertisements without a reliable transaction-type label. The group defined the target as advertised asking price and retained this ambiguity as a limitation. \\
+\midrule
+
+\textbf{2}\newline
+7--13 Sep. & Completed initial loading, schema checks, data-type inspection, and missing-value summaries. Established a reusable local data copy for subsequent analysis. & The dataset contains approximately 3.5 million listings, making repeated loading costly. Local Parquet storage and categorical conversion reduced repeated data-access and memory overhead. \\
+\midrule
+
+\textbf{3}\newline
+14--20 Sep. & Completed duplicate detection and checks for invalid price and area values. Produced missing-value summaries by property type. & Many structural attributes are absent, and missingness differs by property type. The group avoided dropping every incomplete listing and retained missingness for model-specific treatment. \\
+\midrule
+
+\textbf{4}\newline
+21--27 Sep. & Completed the main price and area analyses, reviewed extreme observations, and established the cleaned modelling population of 2,397,001 listings. & Extreme prices, implausible dimensions, and invalid timestamps affected modelling suitability. Price, area, and price-per-area restrictions were applied; invalid optional dimensions were set to missing. \\
+\midrule
+
+\textbf{5}\newline
+28 Sep.--4 Oct. & Completed hierarchical location keys, categorical missing-value handling, text preparation, and the shared chronological 70/15/15 split. & Repeated district names could conflate locations, while advertisements could disclose the target price. Parent-location prefixes and monetary-clause/digit removal addressed these issues, with residual text leakage retained as a limitation. \\
+\midrule
+
+\textbf{6}\newline
+5--11 Oct. & Established constant-median and local price-per-square-metre baselines. Completed structured Ridge training and the three-value regularisation search. & Linear fitting required consistent treatment of skewed numeric inputs, missing values, and numerous categorical levels. Training-fitted log transforms, imputation, scaling, and rare-category pooling formed a common pipeline. \\
+\midrule
+
+\textbf{7}\newline
+12--18 Oct. & Completed the Random Forest depth/feature-fraction comparison and the LightGBM, CatBoost, and XGBoost training configurations. Prepared validation metrics and feature-importance diagnostics. & Tree experiments on the full training population were computationally demanding. A 10\% bootstrap fraction per forest tree, parallel CPU execution, and validation-based stopping controls limited the training workload. \\
+\midrule
+
+\textbf{8}\newline
+19--25 Oct. & Completed TF-IDF features, joint text-and-structured Ridge, and the text-prediction input for LightGBM. Completed the tabular MLP architecture and its preprocessing pipeline. & Dense text matrices would be costly, and in-sample text predictions could mislead the downstream model. Sparse matrices and five-fold out-of-fold Ridge predictions were used; categorical embeddings reduced the neural input expansion. \\
+\midrule
+
+\textbf{9}\newline
+26 Oct.--1 Nov. & Developed the MLP optimisation and early-stopping procedure. Prepared BamiBERT tokenisation, standardised log-price targets, and GPU fine-tuning. & Neural training required control of sequence length, numerical scale, and GPU workload. Text was limited to 512 tokens, targets were standardised for BamiBERT, and mixed precision was configured. \\
+\midrule
+
+\textbf{10}\newline
+2--8 Nov. & Consolidated neural-model predictions, compared structured and text-based approaches, and developed nonnegative prediction blends with validation-fitted coefficients. & Combining separately trained models required aligned observations and consistent prediction units. Validation/test predictions retained common row identities and log-price units. Separate reconstruction of text-model ordering remained a consistency check. \\
+\midrule
+
+\textbf{11}\newline
+9--11 Nov. & Brought together experiment summaries, diagnostic figures, and report contributions. Reviewed model settings, interpretation, and consistency between individual and combined predictions. & Results from different experimental populations could not be pooled directly. Comparisons were restricted to compatible runs; remaining text-filtering and checkpoint-compatibility limitations were retained for discussion. \\
+
+\end{longtable}
+\endgroup
+
+\paragraph{Fortnightly tracking and discussion.}
+Following the kickoff on 31 August, the tracking milestones were set two weeks apart: 14 September (data loading and quality issues), 28 September (cleaning decisions and feature preparation), 12 October (baselines and evaluation protocol), 26 October (tree/text results and neural-training requirements), and 9 November (prediction alignment, model combinations, and report integration). At each checkpoint, members reviewed deliverables, discussed unresolved issues, and agreed on the next tasks. A final review on 11 November covered the consolidated findings and outstanding limitations. Intermediate outputs were also exchanged between meetings so that modelling work could proceed in parallel.

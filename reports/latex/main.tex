@@ -30,6 +30,10 @@
 \usepackage{xcolor}
 \usepackage{array}
 \usepackage{tabularx}
+% Compatibility for newer colortbl with older array installations.
+\makeatletter
+\@ifundefined{insert@pcolumn}{\let\insert@pcolumn\insert@column}{}
+\makeatother
 \usepackage{multirow}
 \usepackage{rotating}
 \usepackage{graphics}
@@ -159,7 +163,7 @@ Class: & CC01 & \\
 Student: & Võ Nhật Tân  & 2353081 \\
 & Ngân Phạm  & 2352525 \\
 & Minh Thiện  & 2352525 \\
-& Chi Phan  & 2352525 \\
+& Phan Ng?c Lan Chi  & 2352137 \\
 & Nguyễn Mạnh Quốc Khánh  & 2352525 \\
 \end{tabular}
 \end{center}
@@ -182,7 +186,7 @@ Student: & Võ Nhật Tân  & 2353081 \\
 \clearpage
 \include{sections/4-ExploratoryDataAnalysis.tex}
 \clearpage
-% \include{sections/5-ModelSelectionAndTraining.tex}
+\include{sections/5-ModelSelectionAndTraining.tex}
 \clearpage
 % \include{sections/6-ModelEvaluationAndComparison.tex}
 \clearpage

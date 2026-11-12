@@ -1,0 +1,188 @@
+\section{Model Selection and Training}
+\label{sec:model-selection-training}
+
+\subsection{Machine Learning}
+\label{subsec:machine-learning}
+\begingroup
+\setlength{\emergencystretch}{3em}
+
+The machine learning experiments predict property asking prices from physical attributes, location, property category, and advertising text. The experimental design progresses from constant and local-median baselines to regularised linear regression, tree ensembles, and models combining textual and structured information. This progression assesses whether nonlinear interactions and listing descriptions contribute predictive information beyond a linear representation of property attributes.
+
+Figure~\ref{fig:ml-pipeline} summarises the modelling workflow. All models share the same chronological training, validation, and test partitions. Learned preprocessing is fitted on training observations during model selection; subsequent refitting procedures are specified separately for each model family.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/ml_training_pipeline.png}
+\caption{Machine learning workflow from shared feature preparation to model fitting and evaluation. Median baselines predict prices directly, while the learned regressors predict log price. OOF denotes out-of-fold predictions used to construct the training input for the text-enhanced LightGBM.}
+\label{fig:ml-pipeline}
+\end{figure}
+
+\subsubsection{Feature Representation and Training Protocol}
+\label{subsubsec:ml-features}
+
+\paragraph{Structured predictors.}
+The structured representation contains seven numeric and eight categorical variables (Table~\ref{tab:ml-inputs}). The target is the asking price in Vietnamese dong (VND). Publication time determines the chronological partitions and is excluded from the predictor matrix. A listing's own price per square metre and other target-derived quantities are also excluded from ordinary predictors.
+
+\begin{table}[htbp]
+\centering
+\caption{Structured features used by the machine learning models.}
+\label{tab:ml-inputs}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Feature group & Variables \\
+\midrule
+Numeric & Area, floor count, frontage width, house depth, road width, bedroom count, bathroom count \\
+Categorical & Property type, province, district, ward, street, development project, house direction, balcony direction \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Location categories are represented hierarchically: district names are prefixed with their province, while ward and street names are prefixed with the resulting district key. This distinguishes identical local names in different administrative areas. Missing categorical values receive a dedicated category. Numeric missing values are retained for model-specific treatment.
+
+\paragraph{Text representation.}
+The title and description are concatenated, lowercased, and stripped of the phone-number placeholder. To reduce direct target disclosure, punctuation-delimited clauses containing monetary terms, including \textit{giá}, \textit{tỷ}, \textit{triệu}, VND, and USD, are removed. Tokens containing digits are subsequently removed, and whitespace is normalised. This conservative processing also removes useful numeric descriptions, such as area and room counts; these remain available through the structured predictors. The monetary-clause filtering is heuristic and cannot guarantee complete removal of every price expression.
+
+\paragraph{Chronological evaluation.}
+The 2,397,001 prepared listings are ordered by publication time. The oldest 70\% form the training partition (1,677,900 observations), the next 15\% form validation (359,550), and the most recent 15\% form testing (359,551). This evaluates prediction on later listings using earlier observations. The test partition is excluded from fitting preprocessing transformations, selecting hyperparameters, and determining stopping points.
+
+\paragraph{Target transformation.}
+The median baselines predict original-scale prices. All learned regressors use the natural-log target
+\begin{equation}
+z_i=\log(1+y_i), \qquad \widehat{y}_i=\exp(\widehat{z}_i)-1,
+\label{eq:ml-log-target}
+\end{equation}
+where $y_i$ denotes asking price in VND. The transformation compresses the upper price tail during fitting. Predictions are transformed back before calculating original-scale evaluation metrics. Because log-price loss and price loss weight errors differently, validation criteria are identified explicitly below.
+
+\subsubsection{Baseline Models and Ridge Regression}
+\label{subsubsec:ml-baselines}
+
+\paragraph{Median-price baseline.}
+The first baseline assigns every property the median training price:
+\begin{equation}
+\widehat{y}_i=\operatorname{median}_{j\in\mathcal{T}}(y_j),
+\end{equation}
+where $\mathcal{T}$ denotes the training partition. This constant predictor provides an absolute-error benchmark without using property attributes.
+
+\paragraph{Local median price per square metre.}
+The second baseline uses area, district, and property type. For each district--property-type group $g$, the median price per square metre is estimated from training observations:
+\begin{equation}
+m_g=\operatorname{median}_{j\in\mathcal{T}:g_j=g}
+\left(\frac{y_j}{a_j}\right), \qquad
+\widehat{y}_i=a_i m_{g_i},
+\end{equation}
+where $a_i$ is area. A group absent from training uses the overall training median price per square metre. This is a study-specific reference model for local area-based pricing; no validation or test targets enter its lookup values.
+
+\paragraph{Ridge regression.}
+Ridge regression introduces an $L_2$ penalty to stabilise linear coefficient estimation~\cite{hoerl1970ridge}. It serves as the regularised linear benchmark for the structured predictors. Numeric variables undergo a logarithmic transformation, median imputation, addition of missingness indicators, and standardisation. Categorical variables are one-hot encoded, pooling levels observed fewer than 50 times. Unseen categories use the pooled category when available. Candidate preprocessing statistics are estimated exclusively from training rows.
+
+The regression objective is
+\begin{equation}
+\min_{b,\boldsymbol{\beta}}\;
+\sum_{i\in\mathcal{T}}\left(z_i-b-\mathbf{x}_i^\top\boldsymbol{\beta}\right)^2
++\alpha\lVert\boldsymbol{\beta}\rVert_2^2,
+\end{equation}
+where $\alpha$ controls coefficient shrinkage~\cite{hoerl1970ridge}. Three values, $\alpha\in\{1,10,100\}$, are compared using validation MAE after inversion to VND. The selected value is $\alpha=1$. The entire preprocessing and regression pipeline is subsequently refitted on training plus validation observations before test prediction.
+
+Figure~\ref{fig:ml-ridge-diagnostic} illustrates the fitted model's test predictions. Points close to the diagonal indicate agreement between actual and predicted prices. Several expensive properties fall below the diagonal, indicating underprediction in the upper price range.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/ml_ridge_actual_vs_predicted.png}
+\caption{Actual and predicted asking prices for a random sample of 3,000 test listings (seed 42) using structured Ridge regression. Both axes are logarithmic and expressed in billion VND. The diagonal denotes exact prediction.}
+\label{fig:ml-ridge-diagnostic}
+\end{figure}
+
+\subsubsection{Tree Ensemble Models}
+\label{subsubsec:ml-trees}
+
+Random Forest aggregates randomised regression trees~\cite{breiman2001forests}, while gradient boosting constructs an additive predictor through successive loss-reducing updates~\cite{friedman2001boosting}. These complementary ensemble approaches allow nonlinear relationships and interactions between physical attributes, property type, and location.
+
+\paragraph{Input encoding.}
+Categorical levels are mapped to integer codes using a training-fitted encoder; unseen levels receive code $-1$. Numeric features retain their original scale and missing values. Random Forest treats category codes as numeric inputs. LightGBM and CatBoost receive explicit categorical-column declarations, while XGBoost receives categorical-typed columns with categorical support enabled. Consequently, the integer encoding does not imply the same treatment of categories across all four models.
+
+\paragraph{Random Forest.}
+Following the randomised-tree aggregation framework of \textcite{breiman2001forests}, the forest contains 100 regression trees, with at least five observations per leaf and random seed 42. Each tree draws a bootstrap sample containing 10\% of the fitting population to reduce the training cost per tree.
+
+The search crosses maximum depth $\{12,20\}$ with feature fraction $\{0.5,1.0\}$, producing four candidate configurations. Candidates fit training log prices and are ranked by validation MAE in VND. Maximum depth 20 and feature fraction 1.0 are selected. The final forest is refitted on training plus validation observations, while the categorical mapping remains fitted on training data.
+
+\paragraph{LightGBM.}
+LightGBM is a scalable gradient-boosted decision-tree framework~\cite{ke2017lightgbm}. The model uses up to 2,000 trees, learning rate 0.05, 63 leaves, and seed 42. Validation log-MAE and the default log-MSE are monitored, with early-stopping patience of 50 rounds. Categorical columns are declared explicitly, and numerical features are not standardised.
+
+Figure~\ref{fig:ml-lightgbm-importance} reports gain-based importance, a tree-model interpretation based on accumulated loss reduction from splits~\cite{friedman2001boosting}. District and area have the highest gains. This indicates their importance to the fitted predictor, rather than a causal effect or an independent contribution in the presence of correlated variables.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/ml_lightgbm_feature_importance.png}
+\caption{LightGBM feature importance measured by accumulated split gain. District categories incorporate the province prefix. Gain values are model-dependent quantities, rather than percentages or effects in VND.}
+\label{fig:ml-lightgbm-importance}
+\end{figure}
+
+\paragraph{CatBoost.}
+CatBoost provides gradient boosting with specialised treatment of categorical features~\cite{prokhorenkova2018catboost}. The fitted configuration allows 2,000 iterations with learning rate 0.1, maximum categorical-combination complexity one, 64 numerical quantisation borders, and seed 42. Categorical columns are explicitly identified in the integer-encoded feature table. The training loss is RMSE on log price, while validation log-MAE determines checkpoint selection with early-stopping patience of 30 rounds.
+
+\paragraph{XGBoost.}
+XGBoost is a scalable tree-boosting system developed by \textcite{chen2016xgboost}. The configuration uses up to 2,000 trees, learning rate 0.05, maximum depth eight, histogram-based tree construction, categorical support, parallel CPU execution, and seed 42. Training operates on log price, monitors validation log-MAE, and uses early-stopping patience of 50 rounds.
+
+The boosting configurations are fixed experimental settings rather than the outcome of a parameter-grid search. All three reach the 2,000-round limit in the recorded training runs. Early stopping is therefore configured but does not shorten those runs. These models retain their training-fitted, validation-monitored predictors rather than undergoing a subsequent training-plus-validation refit.
+
+\begin{table}[htbp]
+\centering
+\caption{Training configurations and selection procedures for structured regressors.}
+\label{tab:ml-settings}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Model & Main settings & Selection and final fitting \\
+\midrule
+Ridge & $\alpha\in\{1,10,100\}$ & Validation MAE in VND; $\alpha=1$; refit on train + validation \\
+Random Forest & 100 trees; depth $\{12,20\}$; feature fraction $\{0.5,1.0\}$; leaf size 5 & Validation MAE in VND; depth 20 and fraction 1.0; refit on train + validation \\
+LightGBM & 2,000 trees; learning rate 0.05; 63 leaves & Validation log-price metrics; patience 50; training-fitted model \\
+CatBoost & 2,000 iterations; learning rate 0.1; categorical-combination complexity 1; 64 borders & Validation log-MAE; patience 30; training-fitted model \\
+XGBoost & 2,000 trees; learning rate 0.05; depth 8; histogram method & Validation log-MAE; patience 50; training-fitted model \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Combining Text and Structured Features}
+\label{subsubsec:ml-text}
+
+Textual information is incorporated using two complementary designs: a joint sparse representation fitted by Ridge, and a text-derived prediction used as an additional LightGBM input. Both preserve the structured attributes while introducing information expressed in the listing description.
+
+\paragraph{TF-IDF representation.}
+Term frequency--inverse document frequency (TF-IDF) assigns weights according to within-document term occurrence and corpus-level document frequency, following established term-weighting methods~\cite{salton1988term}. The representation uses word unigrams, minimum document frequency five, a maximum vocabulary of 50,000 terms, sublinear term frequency, and 32-bit floating-point storage. The resulting vocabulary contains 23,233 terms. Vocabulary selection and IDF estimation use training documents only; validation and test documents reuse the fitted representation.
+
+\paragraph{Ridge on combined features.}
+The TF-IDF matrix is horizontally concatenated with the preprocessed structured matrix, yielding 29,592 columns. Sparse storage avoids materialising a large dense design matrix. Ridge regularisation~\cite{hoerl1970ridge} is selected from $\{1,10,100\}$ using validation MAE in VND, with $\alpha=1$ selected. The final regression coefficients are fitted on the combined training and validation matrices. The vocabulary and structured preprocessing remain fitted on training observations, in contrast to the full-pipeline refit used for structured-only Ridge.
+
+Figure~\ref{fig:ml-validation-selection} visualises the validation searches. Both Ridge variants select $\alpha=1$, and the joint representation has lower validation MAE at all three tested values. The Random Forest comparison supports maximum depth 20 and feature fraction 1.0. These are model-selection results, rather than test-set performance estimates.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/ml_validation_selection.png}
+\caption{Validation-based hyperparameter selection: (a) structured Ridge and Ridge with text and structured features; (b) the four Random Forest configurations. Lower MAE is better. The darker bar indicates the selected forest; values are rounded to three decimals.}
+\label{fig:ml-validation-selection}
+\end{figure}
+
+\paragraph{LightGBM with a text-derived prediction.}
+The second design follows the prediction-as-feature principle of stacked generalisation~\cite{wolpert1992stacked}. A text-only Ridge model predicts log price, and that prediction is appended to the 15 structured attributes as a sixteenth input to LightGBM. To avoid using in-sample fitted target estimates as training features, five-fold cross-validation produces out-of-fold text predictions: each fold is predicted by a Ridge model fitted on the other four folds.
+
+A text Ridge model is then fitted on all training documents to produce validation and test features. Its regularisation parameter reuses the value selected for the joint Ridge model. LightGBM~\cite{ke2017lightgbm} is trained on the augmented feature matrix with the same 2,000-tree limit, learning rate 0.05, 63 leaves, seed 42, and early-stopping patience of 50 rounds as the structured model.
+
+The internal five-fold procedure does not use forward-chaining splits, and the vocabulary is estimated from the complete outer training partition before fold-wise Ridge fitting. Thus, each out-of-fold prediction excludes its own target from Ridge coefficient estimation, but the internal procedure does not reproduce the chronological outer evaluation at every preprocessing stage. This limitation is retained when interpreting the text-enhanced model.
+
+\subsubsection{Evaluation and Prediction Protocol}
+\label{subsubsec:ml-training-outputs}
+
+All original-scale predictions are evaluated using MAE, RMSE, $R^2$, and MAPE. MAE and RMSE are expressed in billion VND, while MAPE is expressed as a percentage. MAE measures typical absolute price error, RMSE emphasises large errors, $R^2$ compares squared error with a constant mean-price reference, and MAPE measures relative error. Positive target prices ensure nonzero MAPE denominators.
+
+For subsequent model combination, validation and test predictions from the boosting and text-enhanced models are retained in log-price units with a common listing identity. The combined-feature Ridge supplies validation predictions from the selected training-only model and test predictions from the model refitted on training plus validation. This prevents the validation estimates from being generated by a regressor already fitted on their targets. Boosting predictions come from their training-fitted, validation-monitored models.
+
+The common outer partition supports comparison across model families, although their final fitting populations differ because only some models are refitted on training plus validation. The heuristic removal of monetary text and the internal cross-validation procedure are additional limitations when interpreting the contribution of textual information.
+
+\endgroup
+\clearpage
+
+\subsection{Deep Learning}
+\label{subsec:deep-learning}
+% Reserved for the deep learning contribution; intentionally left unwritten.
