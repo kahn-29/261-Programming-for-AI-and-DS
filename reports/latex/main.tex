@@ -2,7 +2,6 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{geometry}
-\usepackage{listings}
 \usepackage{graphicx}
 
 \usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype}
@@ -49,53 +48,12 @@ sorting=ynt,
 natbib=true
 ]{biblatex}
 \addbibresource{references.bib}
+% Allow long publisher URLs to wrap within the bibliography margins.
+\setcounter{biburllcpenalty}{100}
+\setcounter{biburlucpenalty}{100}
+\setcounter{biburlnumpenalty}{100}
 
 \hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true}
-% --- CẤU HÌNH HIGHLIGHT CHO SQL/MYSQL ---
-
-% 1. Định nghĩa màu sắc (Giống giao diện VS Code/Workbench)
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-\definecolor{sqlblue}{rgb}{0.0, 0.0, 0.8}
-
-% 2. Định nghĩa ngôn ngữ MySQL mở rộng
-% (Vì language=SQL mặc định thiếu nhiều từ khóa của MySQL)
-\lstdefinelanguage{MySQL}{
-  language=SQL,
-  morekeywords={
-    AUTO_INCREMENT, BIGINT, TINYINT, DATETIME, VARCHAR, TEXT, ENUM, JSON, 
-    UNSIGNED, REFERENCES, CONSTRAINT, ENGINE, CHARSET, COLLATE, 
-    IF, EXISTS, USE, NOW, CURRENT_TIMESTAMP, 
-    utf8mb4_unicode_ci, utf8mb4, InnoDB
-  },
-  sensitive=false % Không phân biệt hoa thường
-}
-
-% 3. Cài đặt giao diện hiển thị
-\lstset{
-    language=MySQL,                 % Sử dụng ngôn ngữ vừa định nghĩa
-    backgroundcolor=\color{backcolour},   % Màu nền nhẹ cho code
-    commentstyle=\color{codegreen}\itshape, % Comment màu xanh lá + nghiêng
-    keywordstyle=\color{sqlblue}\bfseries,  % Từ khóa màu xanh dương + đậm
-    numberstyle=\tiny\color{codegray},      % Số dòng màu xám nhỏ
-    stringstyle=\color{codepurple},         % Chuỗi (String) màu tím
-    basicstyle=\ttfamily\footnotesize,      % Font chữ code nhỏ gọn
-    breakatwhitespace=false,         
-    breaklines=true,                 % Tự động xuống dòng nếu quá dài
-    captionpos=b,                    % Caption nằm dưới
-    keepspaces=true,                 % Giữ nguyên khoảng trắng
-    numbers=left,                    % Hiện số dòng bên trái
-    numbersep=5pt,                   % Khoảng cách số dòng
-    showspaces=false,                
-    showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2,                       % Tab = 2 khoảng trắng cho gọn
-    frame=single,                    % Khung viền đơn
-    rulecolor=\color{black}          % Màu khung
-}
-
 % Set up geometry for the paper layout
 \geometry{a4paper, total={160mm,240mm}, left=25mm, top=30mm}
 
@@ -117,7 +75,7 @@ natbib=true
 \fancyhead[R]{\tiny \bf }
 \fancyfoot{} % clear all footer fields
 \fancyfoot[L]{\scriptsize \ttfamily Page {\thepage}/\pageref{LastPage}}
-\fancyfoot[R]{\leftmark}
+\fancyfoot[R]{\nouppercase{\leftmark}}
 \renewcommand{\headrulewidth}{0.3pt}
 \renewcommand{\footrulewidth}{0.3pt}
 
@@ -125,50 +83,44 @@ natbib=true
 \begin{document}
 
 \begin{titlepage}
-\begin{center}
-VIETNAM NATIONAL UNIVERSITY - HO CHI MINH CITY \\
-HO CHI MINH CITY UNIVERSITY OF TECHNOLOGY \\
-FACULTY OF COMPUTER SCIENCE AND ENGINEERING
-\end{center}
-
-\vspace{1cm}
-
-\begin{figure}[h!]
 \centering
-\includegraphics[width=7cm]{graphics/hcmut.png} % Your university logo image
-\end{figure}
+{\normalsize VIETNAM NATIONAL UNIVERSITY -- HO CHI MINH CITY\par}
+{\normalsize HO CHI MINH CITY UNIVERSITY OF TECHNOLOGY\par}
+{\normalsize FACULTY OF COMPUTER SCIENCE AND ENGINEERING\par}
 
-\vspace{1cm}
+\vspace{0.9cm}
+\includegraphics[width=5.8cm]{graphics/hcmut.png}\par
+\vspace{0.8cm}
 
-\begin{center}
-\begin{tabular}{c}
-\multicolumn{1}{c}{\textbf{{\Large Programming for Artificial Intelligence and Data Science (CO3135) }}}\\
-\\
-\hline
-\\
-\textbf{\large 
-Assignment Submission} \\
-\\
-\textbf{\Large House Price Prediction} \\
-\hline
-\end{tabular}
-\end{center}
+{\large\bfseries Programming for Artificial Intelligence\par}
+{\large\bfseries and Data Science (CO3135)\par}
+\vspace{0.35cm}
+{\large Assignment Submission\par}
+\vspace{0.5cm}
+\rule{\textwidth}{0.6pt}\par
+\vspace{0.35cm}
+{\LARGE\bfseries PREDICTING REAL ESTATE\par}
+\vspace{0.1cm}
+{\LARGE\bfseries ASKING PRICES IN VIETNAM\par}
+\vspace{0.4cm}
+{\Large\bfseries A Study of Machine Learning\par}
+{\Large\bfseries and Deep Learning Approaches\par}
+\vspace{0.35cm}
+\rule{\textwidth}{0.6pt}\par
 
-\vspace{1.5cm}
-
-\begin{center}
+\vspace{0.9cm}
 \begin{tabular}{rll}
-Lecturer: & Trần Huy           &  \\
+Lecturer: & Trần Huy & \\
 Class: & CC01 & \\
-Student: & Võ Nhật Tân  & 2353081 \\
-& Ngân Phạm  & 2352525 \\
-& Minh Thiện  & 2352525 \\
-& Phan Ng?c Lan Chi  & 2352137 \\
-& Nguyễn Mạnh Quốc Khánh  & 2352525 \\
+Students: & Võ Nhật Tân & 2353081 \\
+& Phạm Thanh Bảo Ngân & 2352797 \\
+& Lê Phước Minh Thiện & 2353132 \\
+& Phan Ngọc Lan Chi & 2352137 \\
+& Nguyễn Mạnh Quốc Khánh & 2352525 \\
 \end{tabular}
-\end{center}
 
-\vspace{1.5cm}
+\vfill
+{\large Ho Chi Minh City, 11 November 2026\par}
 \end{titlepage}
 \clearpage
 
@@ -188,11 +140,10 @@ Student: & Võ Nhật Tân  & 2353081 \\
 \clearpage
 \include{sections/5-ModelSelectionAndTraining.tex}
 \clearpage
-% \include{sections/6-ModelEvaluationAndComparison.tex}
+\include{sections/6-ModelEvaluationAndComparison.tex}
 \clearpage
-% \include{sections/7-Conclusion.tex}
+\include{sections/7-Conclusion.tex}
 \clearpage
-\newpage
-\printbibliography
+\printbibliography[heading=bibintoc,title={References}]
 \end{document}
 

@@ -1,33 +1,33 @@
-﻿\section{Group Information \& Member Roles}
+\section{Group Information \& Member Roles}
 \label{sec:group-information}
 
-The group consists of five members working on house price prediction for the Vietnamese real estate market. Responsibilities are organised into dataset preparation and exploratory data analysis, machine learning, and deep learning. Table~\ref{tab:member-roles} lists the individual contributions.
+The group consists of five members working on real estate asking-price prediction in Vietnam. Responsibilities are organised into dataset preparation and exploratory data analysis, machine learning, and deep learning. Table~\ref{tab:member-roles} lists the individual contributions.
 
 \begin{table}[htbp]
 \centering
-\caption{Group members and assigned responsibilities.}
+\caption[Member responsibilities]{Group members and assigned responsibilities.}
 \label{tab:member-roles}
 \small
 \renewcommand{\arraystretch}{1.35}
 \begin{tabularx}{\textwidth}{p{3.5cm}p{2.5cm}X}
 \toprule
-Member & Area & Responsibilities \\
+Member / Student ID & Area & Responsibilities \\
 \midrule
-Nguyễn Mạnh Quốc Khánh & Dataset and EDA & Dataset selection and preparation; schema and missing-value analysis; duplicate and outlier handling; exploratory analysis of price, area, location, and property type; preparation of the dataset and EDA report. \\
+Nguyễn Mạnh Quốc Khánh\newline{\footnotesize 2352525} & Dataset and EDA & Dataset selection and preparation; schema and missing-value analysis; duplicate and outlier handling; exploratory analysis of price, area, location, and property type; preparation of the dataset and EDA report. \\
 \midrule
-Võ Nhật Tân & Machine learning & Structured Ridge regression, Random Forest, LightGBM, and CatBoost; model-specific preprocessing, training, validation, and interpretation of the assigned models. \\
+Võ Nhật Tân\newline{\footnotesize 2353081} & Machine learning & Structured Ridge regression, Random Forest, LightGBM, and CatBoost; model-specific preprocessing, training, validation, and interpretation of the assigned models. \\
 \midrule
-Phan Ngọc Lan Chi & Machine learning & XGBoost, text-only TF-IDF Ridge, joint text-and-structured Ridge, and LightGBM with a text-derived prediction feature; text representation, model training, validation, and interpretation of the assigned models. \\
+Phan Ngọc Lan Chi\newline{\footnotesize 2352137} & Machine learning & XGBoost, text-only TF-IDF Ridge, joint text-and-structured Ridge, and LightGBM with a text-derived prediction feature; text representation, model training, validation, and interpretation of the assigned models. \\
 \midrule
-Ngân Phạm & Deep learning & Tabular multilayer perceptron with categorical embeddings; numerical preprocessing, embedding construction, network implementation, optimisation, and early stopping. \\
+Phạm Thanh Bảo Ngân\newline{\footnotesize 2352797} & Deep learning & Tabular multilayer perceptron with categorical embeddings; numerical preprocessing, embedding construction, network implementation, optimisation, and early stopping. \\
 \midrule
-Minh Thiện & Deep learning & BamiBERT text regression; text preparation, tokenisation, target standardisation, pretrained-model fine-tuning, and checkpoint evaluation. \\
+Lê Phước Minh Thiện\newline{\footnotesize 2353132} & Deep learning & BamiBERT text regression; text preparation, tokenisation, target standardisation, pretrained-model fine-tuning, and checkpoint evaluation. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \paragraph{Shared machine learning responsibilities.}
-Võ Nhật Tân and Phan Ngọc Lan Chi jointly establish the constant-median and local median-price-per-square-metre baselines, prepare the shared feature representation and chronological evaluation protocol, compare the machine learning models, and write the machine learning report. Each member is assigned four learned model configurations. The text-only TF-IDF Ridge model also supplies the prediction feature used by the text-enhanced LightGBM.
+Võ Nhật Tân and Phan Ngọc Lan Chi jointly establish the constant-median and local median-price-per-square-metre baselines, prepare the shared feature representation and chronological evaluation protocol, compare the machine learning models, and write the machine learning report. The text-only TF-IDF Ridge model also supplies the prediction feature used by the text-enhanced LightGBM.
 
 \paragraph{Shared deep learning responsibilities.}
-Ngân Phạm and Minh Thiện are each responsible for one principal neural model. They jointly compare the deep learning results, implement and evaluate the prediction blends combining structured and text-based models, and write the deep learning report.
+Phạm Thanh Bảo Ngân and Lê Phước Minh Thiện are each responsible for one principal neural model. They jointly compare the deep learning results, implement and evaluate the prediction blends combining structured and text-based models, and write the deep learning report.

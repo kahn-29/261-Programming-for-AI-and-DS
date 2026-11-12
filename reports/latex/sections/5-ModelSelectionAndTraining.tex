@@ -13,7 +13,7 @@ Figure~\ref{fig:ml-pipeline} summarises the modelling workflow. All models share
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/ml_training_pipeline.png}
-\caption{Machine learning workflow from shared feature preparation to model fitting and evaluation. Median baselines predict prices directly, while the learned regressors predict log price. OOF denotes out-of-fold predictions used to construct the training input for the text-enhanced LightGBM.}
+\caption[Machine learning workflow]{Machine learning workflow. Median baselines predict prices directly; learned regressors predict log price. OOF denotes the out-of-fold text predictions used to train the text-enhanced LightGBM.}
 \label{fig:ml-pipeline}
 \end{figure}
 
@@ -25,7 +25,7 @@ The structured representation contains seven numeric and eight categorical varia
 
 \begin{table}[htbp]
 \centering
-\caption{Structured features used by the machine learning models.}
+\caption[Structured predictors]{Structured features used by the machine learning models.}
 \label{tab:ml-inputs}
 \small
 \begin{tabularx}{\textwidth}{lX}
@@ -41,7 +41,7 @@ Categorical & Property type, province, district, ward, street, development proje
 Location categories are represented hierarchically: district names are prefixed with their province, while ward and street names are prefixed with the resulting district key. This distinguishes identical local names in different administrative areas. Missing categorical values receive a dedicated category. Numeric missing values are retained for model-specific treatment.
 
 \paragraph{Text representation.}
-The title and description are concatenated, lowercased, and stripped of the phone-number placeholder. To reduce direct target disclosure, punctuation-delimited clauses containing monetary terms, including \textit{giá}, \textit{tỷ}, \textit{triệu}, VND, and USD, are removed. Tokens containing digits are subsequently removed, and whitespace is normalised. This conservative processing also removes useful numeric descriptions, such as area and room counts; these remain available through the structured predictors. The monetary-clause filtering is heuristic and cannot guarantee complete removal of every price expression.
+The title and description are concatenated, lowercased, and stripped of the phone-number placeholder. To reduce direct target disclosure, punctuation-delimited clauses containing monetary terms, including \textit{giá}, \textit{tỷ}, \textit{triệu}, VND, and USD, are removed. Tokens containing digits are subsequently removed, and whitespace is normalised. This conservative processing also removes useful numeric descriptions, such as area and room counts; these remain available through the structured predictors.
 
 \paragraph{Chronological evaluation.}
 The 2,397,001 prepared listings are ordered by publication time. The oldest 70\% form the training partition (1,677,900 observations), the next 15\% form validation (359,550), and the most recent 15\% form testing (359,551). This evaluates prediction on later listings using earlier observations. The test partition is excluded from fitting preprocessing transformations, selecting hyperparameters, and determining stopping points.
@@ -71,7 +71,7 @@ m_g=\operatorname{median}_{j\in\mathcal{T}:g_j=g}
 \left(\frac{y_j}{a_j}\right), \qquad
 \widehat{y}_i=a_i m_{g_i},
 \end{equation}
-where $a_i$ is area. A group absent from training uses the overall training median price per square metre. This is a study-specific reference model for local area-based pricing; no validation or test targets enter its lookup values.
+where $a_i$ is area. A group absent from training uses the overall training median price per square metre. Only training targets contribute to these local pricing estimates.
 
 \paragraph{Ridge regression.}
 Ridge regression introduces an $L_2$ penalty to stabilise linear coefficient estimation~\cite{hoerl1970ridge}. It serves as the regularised linear benchmark for the structured predictors. Numeric variables undergo a logarithmic transformation, median imputation, addition of missingness indicators, and standardisation. Categorical variables are one-hot encoded, pooling levels observed fewer than 50 times. Unseen categories use the pooled category when available. Candidate preprocessing statistics are estimated exclusively from training rows.
@@ -86,10 +86,10 @@ where $\alpha$ controls coefficient shrinkage~\cite{hoerl1970ridge}. Three value
 
 Figure~\ref{fig:ml-ridge-diagnostic} illustrates the fitted model's test predictions. Points close to the diagonal indicate agreement between actual and predicted prices. Several expensive properties fall below the diagonal, indicating underprediction in the upper price range.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.62\textwidth]{figures/ml_ridge_actual_vs_predicted.png}
-\caption{Actual and predicted asking prices for a random sample of 3,000 test listings (seed 42) using structured Ridge regression. Both axes are logarithmic and expressed in billion VND. The diagonal denotes exact prediction.}
+\includegraphics[width=0.60\textwidth]{figures/ml_ridge_actual_vs_predicted.png}
+\caption[Structured Ridge: actual and predicted prices]{Actual and predicted asking prices for 3,000 randomly selected test listings (seed 42) using structured Ridge. Both axes are logarithmic and measured in billion VND; the diagonal denotes exact prediction.}
 \label{fig:ml-ridge-diagnostic}
 \end{figure}
 
@@ -109,12 +109,12 @@ The search crosses maximum depth $\{12,20\}$ with feature fraction $\{0.5,1.0\}$
 \paragraph{LightGBM.}
 LightGBM is a scalable gradient-boosted decision-tree framework~\cite{ke2017lightgbm}. The model uses up to 2,000 trees, learning rate 0.05, 63 leaves, and seed 42. Validation log-MAE and the default log-MSE are monitored, with early-stopping patience of 50 rounds. Categorical columns are declared explicitly, and numerical features are not standardised.
 
-Figure~\ref{fig:ml-lightgbm-importance} reports gain-based importance, a tree-model interpretation based on accumulated loss reduction from splits~\cite{friedman2001boosting}. District and area have the highest gains. This indicates their importance to the fitted predictor, rather than a causal effect or an independent contribution in the presence of correlated variables.
+Figure~\ref{fig:ml-lightgbm-importance} ranks district and area highest by accumulated split gain~\cite{friedman2001boosting}. The model therefore relies strongly on local geography and property size; gain measures predictive use rather than a causal price effect.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/ml_lightgbm_feature_importance.png}
-\caption{LightGBM feature importance measured by accumulated split gain. District categories incorporate the province prefix. Gain values are model-dependent quantities, rather than percentages or effects in VND.}
+\caption[LightGBM feature importance]{LightGBM feature importance by accumulated split gain. District categories include the province prefix.}
 \label{fig:ml-lightgbm-importance}
 \end{figure}
 
@@ -128,7 +128,7 @@ The boosting configurations are fixed experimental settings rather than the outc
 
 \begin{table}[htbp]
 \centering
-\caption{Training configurations and selection procedures for structured regressors.}
+\caption[Model training configurations]{Training configurations and selection procedures for structured regressors.}
 \label{tab:ml-settings}
 \small
 \begin{tabularx}{\textwidth}{lXX}
@@ -160,7 +160,7 @@ Figure~\ref{fig:ml-validation-selection} visualises the validation searches. Bot
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/ml_validation_selection.png}
-\caption{Validation-based hyperparameter selection: (a) structured Ridge and Ridge with text and structured features; (b) the four Random Forest configurations. Lower MAE is better. The darker bar indicates the selected forest; values are rounded to three decimals.}
+\caption[Ridge and Random Forest hyperparameter selection]{Validation MAE for (a) the two Ridge representations and (b) four Random Forest configurations. Lower values are better; the darker bar identifies the selected forest.}
 \label{fig:ml-validation-selection}
 \end{figure}
 
@@ -169,20 +169,121 @@ The second design follows the prediction-as-feature principle of stacked general
 
 A text Ridge model is then fitted on all training documents to produce validation and test features. Its regularisation parameter reuses the value selected for the joint Ridge model. LightGBM~\cite{ke2017lightgbm} is trained on the augmented feature matrix with the same 2,000-tree limit, learning rate 0.05, 63 leaves, seed 42, and early-stopping patience of 50 rounds as the structured model.
 
-The internal five-fold procedure does not use forward-chaining splits, and the vocabulary is estimated from the complete outer training partition before fold-wise Ridge fitting. Thus, each out-of-fold prediction excludes its own target from Ridge coefficient estimation, but the internal procedure does not reproduce the chronological outer evaluation at every preprocessing stage. This limitation is retained when interpreting the text-enhanced model.
-
-\subsubsection{Evaluation and Prediction Protocol}
-\label{subsubsec:ml-training-outputs}
-
-All original-scale predictions are evaluated using MAE, RMSE, $R^2$, and MAPE. MAE and RMSE are expressed in billion VND, while MAPE is expressed as a percentage. MAE measures typical absolute price error, RMSE emphasises large errors, $R^2$ compares squared error with a constant mean-price reference, and MAPE measures relative error. Positive target prices ensure nonzero MAPE denominators.
-
-For subsequent model combination, validation and test predictions from the boosting and text-enhanced models are retained in log-price units with a common listing identity. The combined-feature Ridge supplies validation predictions from the selected training-only model and test predictions from the model refitted on training plus validation. This prevents the validation estimates from being generated by a regressor already fitted on their targets. Boosting predictions come from their training-fitted, validation-monitored models.
-
-The common outer partition supports comparison across model families, although their final fitting populations differ because only some models are refitted on training plus validation. The heuristic removal of monetary text and the internal cross-validation procedure are additional limitations when interpreting the contribution of textual information.
+Five ordinary folds are formed within the chronological training partition. Ridge coefficients are estimated separately for each fold, while the vocabulary remains fitted on the full training partition.
 
 \endgroup
-\clearpage
 
 \subsection{Deep Learning}
 \label{subsec:deep-learning}
-% Reserved for the deep learning contribution; intentionally left unwritten.
+\begingroup
+\setlength{\emergencystretch}{3em}
+
+The neural models comprise a tabular MLP with categorical embeddings and a pretrained Vietnamese text encoder. Boosted trees provide the tabular comparison, following the emphasis on strong baselines in \textcite{gorishniy2021revisiting}.
+
+Both use the chronological evaluation protocol in Section~\ref{subsubsec:ml-features}. Figure~\ref{fig:dl-architectures} contrasts their input representations and regression heads.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.90\textwidth]{figures/dl_model_architectures.png}
+\caption[Neural regression architectures]{Neural regression architectures: (a) the structured MLP with categorical embeddings and (b) the text-only BamiBERT regressor. Both invert their target transformations to predict VND prices.}
+\label{fig:dl-architectures}
+\end{figure}
+
+\subsubsection{Tabular MLP with Categorical Embeddings}
+\label{subsubsec:dl-mlp}
+
+\paragraph{Inputs and embeddings.}
+The numeric branch applies log transformation, median imputation, missingness indicators, and standardisation using training-fitted statistics. Categorical levels observed fewer than five times are pooled, and unseen levels receive a dedicated code. Each categorical variable has a jointly learned embedding, as in neural tabular prediction~\cite{gorishniy2021revisiting}.
+
+For a categorical variable with encoded cardinality $c$, the embedding dimension is set by the experimental heuristic
+\begin{equation}
+d(c)=\min\left(32,\operatorname{round}\left(1.6c^{0.56}\right)\right).
+\end{equation}
+The eight embeddings contribute 162 components. Seven numeric attributes and six missingness indicators contribute another 13, giving 175 inputs. Area has no missing training values and therefore receives no missingness indicator.
+
+\paragraph{Network and objective.}
+Two 256-unit hidden layers use rectified linear activations~\cite{glorot2011rectifier} and dropout probability 0.2~\cite{srivastava2014dropout}. A linear output predicts log price, with its bias initialised to the mean training log price.
+
+Training minimises Huber loss~\cite{huber1964robust} on the residual $r_i=\widehat{z}_i-z_i$:
+\begin{equation}
+\ell_{\delta}(r_i)=
+\begin{cases}
+\tfrac{1}{2}r_i^2, & |r_i|\leq\delta,\\
+\delta\left(|r_i|-\tfrac{1}{2}\delta\right), & |r_i|>\delta,
+\end{cases}
+\qquad \delta=1.
+\label{eq:dl-huber}
+\end{equation}
+Huber loss combines quadratic sensitivity near zero with linear tails for large errors. It is applied to log-price residuals.
+
+\paragraph{Optimisation and stopping.}
+The optimiser is AdamW, which decouples weight decay from adaptive gradient updates~\cite{loshchilov2019decoupled}. The learning rate is $10^{-3}$, weight decay is $10^{-4}$, batch size is 1,024, and the random seed is 42. Training is limited to 30 epochs, with validation log-MAE evaluated after every epoch. Early stopping triggers after three consecutive epochs without improvement, and the best weights are restored.
+
+Validation log-MAE reaches its minimum of approximately 0.2246 at epoch 10 (Figure~\ref{fig:dl-mlp-training}). Training stops after epoch 13 and restores epoch 10, without refitting on validation targets.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{figures/dl_mlp_training.png}
+\caption[MLP training and checkpoint selection]{MLP training Huber loss and validation log-MAE. The dashed line marks the restored epoch-10 checkpoint. The panels show different objectives; values are rounded to four decimal places.}
+\label{fig:dl-mlp-training}
+\end{figure}
+
+\subsubsection{Fine-Tuning a Vietnamese Text Encoder}
+\label{subsubsec:dl-text}
+
+\paragraph{Representation and regression head.}
+The text model fine-tunes the \nolinkurl{Qualcomm-AI-Research/BamiBERT} Vietnamese checkpoint with a newly initialised scalar regression head. Its contextual representations use transformer self-attention~\cite{vaswani2017attention}, with task-specific fine-tuning following the bidirectional encoder paradigm~\cite{devlin2019bert}.
+
+Title and description text are lowercased and stripped of monetary clauses and phone placeholders. Unlike TF-IDF, other numbers are retained because this model has no separate numeric inputs. Documents are limited to 3,000 characters and 512 tokens, with dynamic padding within each batch.
+
+\paragraph{Target scaling.}
+Training log prices are standardised using their mean $\mu_{\mathcal{T}}$ and sample standard deviation $s_{\mathcal{T}}$:
+
+\paragraph{Fine-tuning configuration.}
+The experiment uses one epoch, learning rate $3\times10^{-5}$, warm-up over the first 6\% of training steps, weight decay 0.01, training batch size 64, evaluation batch size 256, and seed 42. Mixed precision uses BF16 when supported and otherwise FP16 on CUDA. Evaluation and checkpoint saving occur at the end of each epoch, with checkpoint selection based on validation MSE.
+
+End-of-epoch validation MSE is 0.10254. Figure~\ref{fig:dl-bamibert-training} shows the training trajectory and this single validation measurement. The one-epoch limit determines training duration; an early-stopping callback with patience one is also configured.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/dl_bamibert_training.png}
+\caption[BamiBERT fine-tuning loss]{BamiBERT fine-tuning over one epoch. Training MSE is measured on standardised log price; the orange point denotes the single end-of-epoch validation measurement.}
+\label{fig:dl-bamibert-training}
+\end{figure}
+
+\subsubsection{Combining Structured and Textual Predictors}
+\label{subsubsec:dl-ensemble}
+
+Stacked generalisation~\cite{wolpert1992stacked} combines seven log-price predictors: LightGBM, CatBoost, XGBoost, MLP, joint text--structured Ridge, text-enhanced LightGBM, and BamiBERT. Predictions share the same observation indices and validation/test labels.
+
+Four combinations distinguish the contribution of the text-based models:
+\begin{enumerate}
+\item \textbf{Structured:} LightGBM, CatBoost, XGBoost, and MLP.
+\item \textbf{Structured + TF-IDF:} the structured combination plus joint Ridge and text-enhanced LightGBM.
+\item \textbf{Structured + BamiBERT:} the structured combination plus the text encoder.
+\item \textbf{All models:} all seven base predictors.
+\end{enumerate}
+
+For each combination, coefficients are fitted on validation observations by nonnegative least squares with an intercept:
+\begin{equation}
+\min_{b,\,\mathbf{w}\geq0}\;
+\sum_{i\in\mathcal{V}}
+\left(z_i-b-\sum_{m=1}^{M}w_m\widehat{z}_{im}\right)^2,
+\qquad
+\widehat{y}_i=\exp\left(b+\sum_{m=1}^{M}w_m\widehat{z}_{im}\right)-1.
+\label{eq:dl-blending}
+\end{equation}
+Here $\mathcal{V}$ is the validation partition. The coefficients are not constrained to sum to one, so the fitted predictor is a calibrated linear combination rather than a normalised weighted average. No test targets are used to estimate the coefficients.
+
+The all-model blend assigns coefficients of approximately 0.41 to BamiBERT, 0.23 to text-enhanced LightGBM, and 0.19 to XGBoost (Figure~\ref{fig:dl-blend-coefficients}). Smaller coefficients need not imply an uninformative predictor, because base predictions are correlated and displayed values are rounded.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{figures/dl_ensemble_coefficients.png}
+\caption[Validation-fitted blend coefficients]{Nonnegative blend coefficients, rounded to two decimals. Dashes denote excluded predictors. A separate intercept is fitted, and coefficients are not constrained to sum to one.}
+\label{fig:dl-blend-coefficients}
+\end{figure}
+
+The fitted coefficients are applied to test predictions without further adjustment. Evaluation results and the limits of the comparison are presented in Section~\ref{sec:model-evaluation}.
+
+\endgroup
